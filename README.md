@@ -229,3 +229,6 @@ instruction. The I and J types only have one opcode.
 The naive sum type solution above doesn't work here, since you don't
 have two separate tags for the I vs. J distinction and for the
 individual opcodes between them.
+
+[1]: https://github.com/zenhack/zero
+[2]: https://doc.rust-lang.org/nomicon/data.html
