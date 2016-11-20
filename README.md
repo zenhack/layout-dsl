@@ -126,9 +126,9 @@ abstraction, such as C++ or rust:
 ### Sum types?
 If we have a data structure like (OCaml syntax):
 
-type t =
-    | Foo of (uint32, uint64)
-    | Bar of bool
+    type t =
+        | Foo of (uint32, uint64)
+        | Bar of bool
 
 A typical approach to laying this out in memory is to have something
 similar to this C declaration:
