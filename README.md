@@ -124,6 +124,40 @@ abstraction, such as C++ or rust:
 
 ## Questions:
 
+### Endianness?
+
+My current thinking is that we can have an annotation for endianness
+specified at any level. Sub-components inherit the endianness of their
+parent unless otherwise specified. Some examples:
+
+The GDT is an x86 specific thing, so it's little-endian. We can revise
+our structure like so:
+
+    - layout GDTEnt {
+    + layout(little) GDTEnt {
+      ...
+
+...and the whole data structure is tagged as little endian. This also
+covers some odder cases; suppose we have a structure with a big
+endian header and trailer, and a little-endian payload, and we want to
+define the whole structure. We could do:
+
+    layout(big) Packet {
+        type[0:4]
+        total_len[0:32]
+        src_addr[0:32]
+        dest_addr[0:32]
+        // other header fields
+        (little) payload {
+            foo[0:16]
+            bar[0:32]
+            0: uint3
+        }
+        // trailer fields
+        trailer1[0:4]
+        trailer2[0:8]
+    }
+
 ### Sum types?
 If we have a data structure like (OCaml syntax):
 
