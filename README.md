@@ -32,7 +32,7 @@ Note the following:
 * We have conceptually-single fields spread across multiple locations
   in the struct; `base` spans three different struct fields.
 * Some fields don't divide evenly into bytes, so they're awkwardly
-  sharing variables. `flags_and_limit_high` is conceptually a four-bit
+  sharing variables. `flags_limit_high` is conceptually a four-bit
   flags field, and a four-bit chunk of the limit.
 * Some fields are smaller than a single byte; both flags and access are
   made up of smaller bit fields.
@@ -53,7 +53,8 @@ value across three different locations isn't quite as trivial as storing
 a value in a word-aligned memory location.
 
 Rust doesn't even define the memory representation for its types, and
-with good reasons. [See this section of the Rustonomicon][2] for details
+with good reasons. [See this section of the Rustonomicon][2] for
+details.
 
 ..Though note that you can impose layout restrictions like those in C,
 if needed.
@@ -158,8 +159,13 @@ One stab, which is more verbose than I want:
         bar = 7
     }
 
-    type T union {
-        foo struct {
+    type T union(TTag) {
+        foo: struct {
+            x: u32
+            y: u64
+        }
+        bar: struct {
+            x: bool
         }
     }
 
