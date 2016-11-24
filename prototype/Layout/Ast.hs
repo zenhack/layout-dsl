@@ -23,7 +23,7 @@ data Decl
 
 data Type
     = StructT
-        [(Text, Type)] -- ^ (fieldname, type) pairs
+        [([Text], Type)] -- ^ (fieldname, type) pairs
     | UIntT
         Int -- ^ bit width
     deriving(Show)

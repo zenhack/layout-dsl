@@ -26,12 +26,25 @@ pIdent = token $ T.pack <$>
 
 pLayoutK = token (string "layout")
 pTypeK = token (string "type")
+pStructK = token (string "struct")
 
 pDecl = pTypeDecl
 
 pTypeDecl = pTypeK >> TypeDecl <$> pIdent <*> pType
 
-pType = pUIntType
+pType :: Parser Type
+pType = try pUIntType <|> pStructType
+
+pStructType = do
+    pStructK
+    token $ char '{'
+    fields <- many1 $ do
+        names <- pIdent `sepBy` (token $ char ',')
+        token (char ':')
+        ty <- pType
+        return (names, ty)
+    token $ char '}'
+    return $ StructT fields
 
 pUIntType = do
     token $ string "uint"
