@@ -35,6 +35,8 @@ pTypeDecl = pTypeK >> TypeDecl <$> pIdent <*> pType
 pType :: Parser Type
 pType = try pUIntType <|> pStructType
 
+pFile = many whitespaceOrComment >> File <$> many pDecl
+
 pStructType = do
     pStructK
     token $ char '{'

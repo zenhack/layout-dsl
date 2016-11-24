@@ -1,0 +1,10 @@
+
+type Foo struct {
+	f, g: uint<2>
+}
+
+type Bar struct {
+	substruct: struct {
+		w, x, y, z: uint<64>
+	}
+}
