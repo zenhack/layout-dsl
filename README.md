@@ -70,18 +70,21 @@ can be written to derive getters and setters for these types, or to
 generate constant values to embed in executables, or potentially other
 applications.
 
-## Some rough ideas
+## Overview
 
-I'd like to be able to define two things:
+For each data type, we define two things:
 
 1. The logical structure of the data type
 2. Its physical layout.
 
 Example:
 
+    /* Declares a logical view of the data; base is one conceputal
+     * field, so we express it that way.
     type GDTEnt struct {
-        base: uint32
-        limit: uint20
+        // The `unit` type can be parametrized over any bit length:
+        base: uint<32>
+        limit: uint<20>
 
         flags: struct {
             gr, sz: bool
@@ -89,23 +92,45 @@ Example:
 
         access: struct {
             ac, rw, dc, ex, pr: bool
-            privl: uint2
+            privl: uint<2>
         }
     }
 
-    layout GDTEnt {
-        limit[0:16]
-        base[0:24]
+    /* Declares the physical layout of the data. The whole thing is
+     * declared to be little endian; this is inherited by component
+     * fields unless they specifically override it (see the section on
+     * endianness, below).
+     *
+     * Endianness is unspecified by default, but if left unspecified
+     * may only be used as part of a larger structure.
+     */
+    layout(little) GDTEnt {
+        // Denotes the bottom 16 bits of the limit field. Can be specified as
+        // either [hi:lo] or [lo:hi]. We allow both to make transcribing
+        // from hardware manuals easier.
+        limit[15:0]
+
+        base[23:0]
+
         access {
-            ac, rw, dc, ex, 1: bits(1)
-            privl: bits(2)
-            pr: bits(1)
+            // Without the slice notation, we embed the whole field.
+            // Booleans are assumed 1 bit.
+            ac, rw, dc, ex
+
+            // A bit that is always 1. Syntax is Verilog inspired, of
+            // the form <length>'<radix><value>. The radix `b` is
+            // base 2.
+            1'b1
+
+            privl // 2 bits wide; derived from the type declaration.
+            pr
         }
-        limit[16:20]
+
+        limit[19:16]
         flags {
-            0: uint2
-            sz: bit
-            gr: bit
+            2'b0 // 2 bit field with the value 0.
+            sz
+            gr
         }
         base[24:32]
     }
@@ -113,8 +138,8 @@ Example:
 A tool could then be used to generate C code that could be called like
 so:
 
-    set_base(&ent, 0xffffffff);
-    uint32_t lim = get_limit(&ent);
+    GDTEnt_set_base(&ent, 0xffffffff); // set the value of the `base` field.
+    uint32_t lim = get_limit(&ent); // get the value of the `limit` field.
 
 Or in a language that has more a bit more powerful mechanisms for
 abstraction, such as C++ or rust:
@@ -122,43 +147,101 @@ abstraction, such as C++ or rust:
     ent.base = 0xffffffff;
     uint32_t lim = ent.limit;
 
-## Questions:
+## Endianness
 
-### Endianness?
-
-My current thinking is that we can have an annotation for endianness
-specified at any level. Sub-components inherit the endianness of their
-parent unless otherwise specified. Some examples:
-
-The GDT is an x86 specific thing, so it's little-endian. We can revise
-our structure like so:
-
-    - layout GDTEnt {
-    + layout(little) GDTEnt {
-      ...
-
-...and the whole data structure is tagged as little endian. This also
-covers some odder cases; suppose we have a structure with a big
-endian header and trailer, and a little-endian payload, and we want to
-define the whole structure. We could do:
+Endianness can be declared explicitly on an entire layout, or on any field,
+and is inherited by sub-components unless they specifically override it.
+As an example, suppose we have some sort of packet, with big-endian
+headers and trailers, but whose payload is little endian. We might have a
+layout like this:
 
     layout(big) Packet {
         type[0:4]
-        total_len[0:32]
-        src_addr[0:32]
-        dest_addr[0:32]
+        0'b4
+        total_len
+        src_addr
+        dest_addr
         // other header fields
         (little) payload {
             foo[0:16]
             bar[0:32]
             0: uint3
+            // ...
         }
         // trailer fields
         trailer1[0:4]
         trailer2[0:8]
     }
 
-### Sum types?
+A layout is permitted to omit endianness information at the top level,
+e.g:
+
+    layout Foo {
+        bar
+        baz[0:3]
+        0'x3f
+    }
+
+In this case, the data type can only be used as part of a larger
+structure that *does* define the overall endianness.
+
+## Alignment
+
+Alignment could be specified with an annotation similar to that used for
+endianness, e.g:
+
+    layout(little,align=8B) Foo {
+        // ...
+    }
+
+Would denote a little-endian structure that must be 8-byte aligned.
+
+Tools should detect inconsistencies in alignment specifications and
+report them as errors, e.g:
+
+
+    type foo {
+        x: bar
+    }
+
+    type bar {
+        y: bool
+    }
+
+    layout(align=4) foo {
+        x
+    }
+
+    layout(align=8) bar {
+        y 63'b0
+    }
+
+In this case, foo will be aligned on a 4-byte boundary, but one of it's
+members (x) demands an 8-byte alignment.
+
+## Recommendations for code-generation tools
+
+The most obvious class of tool that uses this language is one which
+generates data types and getters/setters for a programming language,
+such as C, C++, or Rust. This section lists some general recommendations
+for these tools.
+
+### Setters should check inputs
+
+In many cases, the host language will not be able to capture the
+required constraints in its type system. For example, C does not have a
+2-bit unsigned integer type, so a setter for the `privl` field in the
+`GDTEnt` structure defined above could be passed values that don't
+actually fit in the field.
+
+Setters should check inputs and panic/abort if they are invalid. In some
+contexts this may a problem for performance, in which case it is
+acceptable to generate `*_unsafe` variants, but APIs should discourage
+their use.
+
+# Open Questions
+
+## Sum types?
 If we have a data structure like (OCaml syntax):
 
     type t =
@@ -213,7 +296,7 @@ One stab, which is more verbose than I want:
 Also, this fails to capture more tricky cases like the mips instructions
 described below.
 
-### Pointers/References?
+## Pointers/References?
 
 * Relative vs absolute?
 * Physical/virtual address distinction?
@@ -227,17 +310,34 @@ I see two ways of approaching this:
 * Try to come up with a way to compose things. We're not going to
   capture every possible addressing model by just enumerating them.
 
-### Variable length fields?
+## MMIO/other constrained access methods.
 
-### Scope?
+MMIO structures tend to have requirements about the load/store sizes.
+The language should be able to capture this, and tools should generate
+code that respects this.
+
+There are also other cases where data must be accessed in particular
+ways, e.g. port IO on x86, or filesystems stored on disk.
+
+It may make sense to have field access constraints defined as a third
+facet, alongside logical and physical layout.
+
+For now, the "default field access definition" assumes memory
+with specified alignments; portio and other weirder things are left
+as future work.
+
+## Variable length fields?
+
+## Scope?
 
 I'm pretty sure I want at least the sum-type functionality, but the
 pointer stuff gets a little trickier, and you could go pretty deep with
 this. Need to better define the scope of things we want to deal with.
 
-### What code to gen?
+## What code to gen?
 
-* What should the exposed APIs look like? What tools would be useful?
+* What should the exposed APIs look like? What tools would be useful? We
+  have some notions described above, but should keep thinking on this.
 
 Thoughts:
 
@@ -259,7 +359,7 @@ Thoughts:
     * This very well may be out of scope.
 * See what prior art exists.
 
-### Mips encoding
+## Mips encoding
 
 Mips has three basic encoding types: R, I, and J. In all cases, the
 first six bits are an opcode. For R-Type instructions, the opcode field
