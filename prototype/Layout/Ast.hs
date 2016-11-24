@@ -1,17 +1,31 @@
+{-|
+
+Abstract synatx tree for the DSL.
+-}
 module Layout.Ast where
 
 import Data.Text(Text)
 
-data Ast = Ast [Decl] deriving(Show)
+data File = File [Decl] deriving(Show)
 
+-- | A top-level declaration
 data Decl
-    = TypeDecl Text Type
-    | LayoutDecl Text [LayoutParam] [LayoutSpec]
+    -- logical layout declaration
+    = TypeDecl
+        Text -- ^ type name
+        Type -- ^ definition
+    -- | Physical layout declaration
+    | LayoutDecl
+        Text -- ^ type name
+        [LayoutParam]
+        [LayoutSpec]
     deriving(Show)
 
 data Type
-    = StructT [(Text, Type)]
-    | UIntT Int
+    = StructT
+        [(Text, Type)] -- ^ (fieldname, type) pairs
+    | UIntT
+        Int -- ^ bit width
     deriving(Show)
 
 data LayoutParam
@@ -24,7 +38,14 @@ data ByteOrder = Little | Big deriving(Show)
 data LayoutSpec = LayoutSpec [LayoutParam] LayoutField deriving(Show)
 
 data LayoutField
-    = SliceL Text Int Int
-    | FixedL Int Int Int
-    | StructL [(Text, LayoutSpec)]
+    = SliceL
+        Text -- ^ field name
+        Int -- ^ first index
+        Int -- ^ second index
+    | FixedL
+        Int -- ^ length
+        Int -- ^ radix
+        Int -- ^ value
+    | StructL
+        [(Text, LayoutSpec)] -- ^ (fieldname, type) pairs
     deriving(Show)
