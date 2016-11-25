@@ -70,6 +70,10 @@ can be written to derive getters and setters for these types, or to
 generate constant values to embed in executables, or potentially other
 applications.
 
+This is still very WIP. Below we describe an overview of current
+thinking. The file `grammar.md` has the beginnings of a more formal
+definition, but it is incomplete.
+
 ## Overview
 
 For each data type, we define two things:
