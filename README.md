@@ -139,7 +139,7 @@ A tool could then be used to generate C code that could be called like
 so:
 
     GDTEnt_set_base(&ent, 0xffffffff); // set the value of the `base` field.
-    uint32_t lim = get_limit(&ent); // get the value of the `limit` field.
+    uint32_t lim = GDTEnt_get_limit(&ent); // get the value of the `limit` field.
 
 Or in a language that has more a bit more powerful mechanisms for
 abstraction, such as C++ or rust:
