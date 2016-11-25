@@ -165,7 +165,7 @@ layout like this:
         (little) payload {
             foo[0:16]
             bar[0:32]
-            0: uint3
+            3'b0
             // ...
         }
         // trailer fields
