@@ -137,18 +137,19 @@ The following keywords are reserved and may not be used as identifiers.
 * struct
 * type
 * uint
+* bool
 
 # Integer literals
 
 An integer literal is a sequence of digits representing an integer
-constant. An optional prefix sets a non-decimal base: 0 for octal, 0x or
-0X for hexadecimal, 0b or 0B for binary. In hexadecimal literals,
+constant. An optional prefix sets a non-decimal base: 0o or | 0O for octal,
+0x or 0X for hexadecimal, 0b or 0B for binary. In hexadecimal literals,
 letters a-f and A-F represent values 10 through 15.
 
 ```
-int_lit     = decimal_lit | octal_lit | hex_lit .
+int_lit     = decimal_lit | octal_lit | hex_lit | binary_lit .
 decimal_lit = ( "1" … "9" ) { decimal_digit } .
-octal_lit   = "0" { octal_digit } .
+octal_lit   = "0" ( "o" | "O" ) { octal_digit } .
 hex_lit     = "0" ( "x" | "X" ) hex_digit { hex_digit } .
 binary_lit  = "0" ( "b" | "B" ) binary_digit { binary_digit } .
 ```
@@ -159,4 +160,50 @@ binary_lit  = "0" ( "b" | "B" ) binary_digit { binary_digit } .
 0xBadFace
 170141183460469231731687303715884105727
 0b11010101
+```
+
+# Constant field literals
+
+A constant field is a sequence of digits representing a field in a data
+structure with both constant width and constant value. It is of the
+form `<size>'<radix><value>`
+
+```
+const_field          = const_radix_field | const_decimal_field .
+const_radix_field    = decimal_lit "'" ( octal_lit | hex_lit | binary_lit ) .
+const_decimal_field  = decimal_lit "'0" ( "d" | "D" ) decimal_lit .
+```
+
+TODO: the decimal radix thing is somewhat inconsistent; should think about this.
+
+# Types
+
+Types define the *logical* structure of values.
+
+```
+Type     = TypeName | TypeLit .
+TypeName = identifier .
+TypeLit  = StructType | UIntType | BoolType
+
+StructType = "struct" "{" { IdentifierList ":" Type } "}" .
+UIntType   = "uint" "<" int_lit ">" .
+BoolType   = "bool" .
+
+IdentifierList = identifier { "," identifier } .
+```
+
+# Layouts
+
+Layouts define the *physical* structure of values. Layouts consist of a set of
+optional annotations specifying things like endianness and alignment, and a
+physical mapping of fields in the corresponding type declaration.
+
+```
+Layout       = [ "(" [ AnnotationList ] ")" ] LayoutField .
+LayoutField  = identifier [ LayoutSlice | LayoutStruct ] .
+LayoutStruct = "{" { Layout } "}" .
+LayoutSlice  = "[" int_lit ":" int_lit "]" .
+
+AnnoationList = Annotation { "," Annotation } .
+Anotation     = "big" | "little"  | "align" "=" int_lit .
 ```
