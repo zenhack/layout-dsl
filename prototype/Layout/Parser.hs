@@ -1,9 +1,12 @@
-module Layout.Parser where
+module Layout.Parser (pFile) where
 
 import Control.Monad (void)
 import Text.ParserCombinators.Parsec hiding(token)
 import qualified Data.Text as T
 import Layout.Ast
+
+
+-- Misc. Utility stuff
 
 whitespace, comment, blockComment, eolComment :: Parser ()
 
@@ -17,40 +20,41 @@ blockComment = do
     void $ manyTill anyChar (try $ string "*/")
 whitespaceOrComment = try comment <|> whitespace
 
+-- | @token p@ parses @p@ with optional trailing whitespace/comments.
 token :: Parser a -> Parser a
 token p = p <* many whitespaceOrComment
+
+-- | @keyword p@ parses the literal token @p@.
+keyword :: String -> Parser ()
+keyword = void . token . string
+
+-- | Parse a whole source file
+pFile = many whitespaceOrComment >> File <$> many pDecl
 
 pIdent = token $ T.pack <$>
     ((:) <$> (letter <|> char '_')
          <*> many (letter <|> digit <|> char '_'))
 
-pLayoutK = token (string "layout")
-pTypeK = token (string "type")
-pStructK = token (string "struct")
-
 pDecl = pTypeDecl
 
-pTypeDecl = pTypeK >> TypeDecl <$> pIdent <*> pType
+pTypeDecl = keyword "type" >> TypeDecl <$> pIdent <*> pType
 
 pType :: Parser Type
-pType = try pUIntType <|> pStructType
+pType = try pUIntType <|> try pStructType
 
-pFile = many whitespaceOrComment >> File <$> many pDecl
 
 pStructType = do
-    pStructK
-    token $ char '{'
+    keyword "struct" >> keyword "{"
     fields <- many1 $ do
         names <- pIdent `sepBy` (token $ char ',')
-        token (char ':')
+        keyword ":"
         ty <- pType
         return (names, ty)
-    token $ char '}'
+    keyword "}"
     return $ StructT fields
 
 pUIntType = do
-    token $ string "uint"
-    token $ char '<'
+    keyword "uint" >> keyword "<"
     num <- many1 digit
-    token $ char '>'
+    keyword ">"
     return $ UIntT $ read num
