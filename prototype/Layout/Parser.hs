@@ -1,6 +1,11 @@
 --module Layout.Parser (pFile) where
 module Layout.Parser where
 
+-- General note: we make use of fewer of parsec's features and pre-existing
+-- helpers than might otherwise sense, favoring instead having this
+-- implementation closely follow the grammar in ../grammar.md. This should make
+-- it easier to verify that the implementation is correct.
+
 import Control.Monad (void)
 import Data.Bits(shiftL)
 import Text.ParserCombinators.Parsec hiding(token)
