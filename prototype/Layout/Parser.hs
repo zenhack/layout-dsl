@@ -112,7 +112,7 @@ pConstField = token $ do
 
 
 -- | Parse a whole source file
-pFile = many whitespaceOrComment >> File <$> many pDecl
+pFile = many whitespaceOrComment *> (File <$> many pDecl) <* eof
 
 
 pDecl :: Parser Decl
