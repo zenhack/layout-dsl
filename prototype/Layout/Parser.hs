@@ -161,9 +161,9 @@ pLayoutField = choice $ map try
     [ do
         name <- pIdent
         keyword "["
-        index1 <- read <$> many1 digit
+        index1 <- pIntLit
         keyword ":"
-        index2 <- read <$> many1 digit
+        index2 <- pIntLit
         keyword "]"
         return $ SliceL name index1 index2
     , WholeL <$> pIdent
