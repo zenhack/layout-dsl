@@ -1,6 +1,7 @@
 
 type Foo struct {
 	f, g: uint<2>
+	hello: bool
 }
 
 type Bar struct {

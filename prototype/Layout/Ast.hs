@@ -26,6 +26,7 @@ data Type
         [([Text], Type)] -- ^ (fieldname, type) pairs
     | UIntT
         Int -- ^ bit width
+    | BoolT
     deriving(Show)
 
 data LayoutParam

@@ -122,8 +122,10 @@ pTypeDecl :: Parser Decl
 pTypeDecl = keyword "type" >> TypeDecl <$> pIdent <*> pType
 
 pType :: Parser Type
-pType = try pUIntType <|> pStructType
-
+pType = choice (map try [ pUIntType
+                        , pStructType
+                        , keyword "bool" >> return BoolT
+                        ])
 
 pStructType = do
     keyword "struct" >> keyword "{"
