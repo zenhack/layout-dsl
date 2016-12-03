@@ -18,6 +18,8 @@ cabal-version:       >=1.10
 
 executable layout-dsl-prototype
   main-is:             Main.hs
+  extensions:
+    OverloadedStrings
   other-modules:
     Layout.Ast,
     Layout.Parser

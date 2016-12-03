@@ -8,3 +8,7 @@ type Bar struct {
 		w, x, y, z: uint<64>
 	}
 }
+
+layout Bar {
+	substruct
+}

@@ -39,7 +39,7 @@ data LayoutSpec = LayoutSpec [LayoutParam] LayoutField deriving(Show)
 
 data LayoutField
     = SliceL
-        Text -- ^ field name
+        Text -- ^ name
         Int -- ^ first index
         Int -- ^ second index
     | FixedL
@@ -47,5 +47,8 @@ data LayoutField
         Int -- ^ radix
         Int -- ^ value
     | StructL
-        [(Text, LayoutSpec)] -- ^ (fieldname, type) pairs
+        Text -- ^ name
+        [LayoutSpec] -- ^ fields
+    | WholeL
+        Text -- ^ field name
     deriving(Show)
