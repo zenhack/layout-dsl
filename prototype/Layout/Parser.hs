@@ -57,11 +57,11 @@ pIdent = try $ token $ do
 
 
 pIntLit :: Parser Int
-pIntLit = interpIntLit <$> (choice $ map try [ pDecimalLit
-                                             , pOctalLit
-                                             , pHexLit
-                                             , pBinaryLit
-                                             ])
+pIntLit = interpIntLit <$> choice (map try [ pDecimalLit
+                                           , pOctalLit
+                                           , pHexLit
+                                           , pBinaryLit
+                                           ])
 pDecimalLit = pNoRadixDecimalLit <|> pRadixDecimalLit where
     pNoRadixDecimalLit = (:) <$> oneOf ['1'..'9'] <*> many pDecimalDigit
     pRadixDecimalLit   = (++) <$> pLitPrefix "dD" <*> many1 pDecimalDigit
@@ -128,7 +128,7 @@ pType = try pUIntType <|> pStructType
 pStructType = do
     keyword "struct" >> keyword "{"
     fields <- many1 $ do
-        names <- pIdent `sepBy` (token $ char ',')
+        names <- pIdent `sepBy` token (char ',')
         keyword ":"
         ty <- pType
         return (names, ty)
