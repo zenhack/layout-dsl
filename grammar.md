@@ -149,7 +149,7 @@ letters a-f and A-F represent values 10 through 15.
 ```
 int_lit     = decimal_lit | octal_lit | hex_lit | binary_lit .
 decimal_lit = ( "1" … "9" ) { decimal_digit } .
-octal_lit   = "0" ( "o" | "O" ) { octal_digit } .
+octal_lit   = "0" ( "o" | "O" ) octal_digit { octal_digit } .
 hex_lit     = "0" ( "x" | "X" ) hex_digit { hex_digit } .
 binary_lit  = "0" ( "b" | "B" ) binary_digit { binary_digit } .
 ```
