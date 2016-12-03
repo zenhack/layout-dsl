@@ -198,7 +198,8 @@ physical mapping of fields in the corresponding type declaration.
 
 ```
 Layout       = [ "(" [ AnnotationList ] ")" ] LayoutField .
-LayoutField  = identifier [ LayoutSlice | LayoutStruct ] .
+LayoutField  = const_field | NamedField
+NamedField = identifier [ LayoutSlice | LayoutStruct ] .
 LayoutStruct = "{" { Layout } "}" .
 LayoutSlice  = "[" int_lit ":" int_lit "]" .
 

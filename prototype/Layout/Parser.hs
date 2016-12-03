@@ -46,22 +46,23 @@ keyword :: String -> Parser ()
 keyword = void . token . string
 
 pIdent :: Parser Text
-pIdent = try $ token $ do
+pIdent = (try $ token $ do
     first <- pLetter
     rest <- many (pLetter <|> pDecimalDigit)
     let name = first:rest
     if name `elem` ["layout", "struct", "type", "uint", "bool"] then
         pzero
     else
-        return (T.pack name)
+        return (T.pack name)) <?> "identifier"
 
 
 pIntLit :: Parser Int
-pIntLit = interpIntLit <$> choice (map try [ pDecimalLit
-                                           , pOctalLit
-                                           , pHexLit
-                                           , pBinaryLit
-                                           ])
+pIntLit = interpIntLit <$>
+    ((token $ choice $ map try [ pDecimalLit
+                               , pOctalLit
+                               , pHexLit
+                               , pBinaryLit
+                               ]) <?> "integer literal")
 pDecimalLit = pNoRadixDecimalLit <|> pRadixDecimalLit where
     pNoRadixDecimalLit = (:) <$> oneOf ['1'..'9'] <*> many pDecimalDigit
     pRadixDecimalLit   = (++) <$> pLitPrefix "dD" <*> many1 pDecimalDigit
@@ -139,7 +140,7 @@ pStructType = do
 
 pUIntType = do
     keyword "uint" >> keyword "<"
-    num <- token pIntLit
+    num <- pIntLit
     keyword ">"
     return $ UIntT num
 
@@ -157,15 +158,22 @@ pLayoutSpec = LayoutSpec [] <$> pLayoutField
 
 
 pLayoutField :: Parser LayoutField
-pLayoutField = choice $ map try
-    [ do
-        name <- pIdent
-        keyword "["
-        index1 <- pIntLit
-        keyword ":"
-        index2 <- pIntLit
-        keyword "]"
-        return $ SliceL name index1 index2
-    , WholeL <$> pIdent
-    , pConstField
-    ]
+pLayoutField = pConstField <|> pNamedField
+
+pNamedField = do
+    name <- pIdent
+    mod <- choice (map try [ pLayoutSlice
+                           , pLayoutStruct
+                           , return WholeL
+                           ])
+    return (mod name)
+
+pLayoutSlice = do
+    keyword "["
+    index1 <- pIntLit
+    keyword ":"
+    index2 <- pIntLit
+    keyword "]"
+    return (\name -> SliceL name index1 index2)
+
+pLayoutStruct = pzero
