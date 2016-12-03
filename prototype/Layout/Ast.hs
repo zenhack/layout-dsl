@@ -44,7 +44,6 @@ data LayoutField
         Int -- ^ second index
     | FixedL
         Int -- ^ length
-        Int -- ^ radix
         Int -- ^ value
     | StructL
         Text -- ^ name

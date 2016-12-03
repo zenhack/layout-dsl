@@ -1,4 +1,5 @@
-module Layout.Parser (pFile) where
+--module Layout.Parser (pFile) where
+module Layout.Parser where
 
 import Control.Monad (void)
 import Data.Bits(shiftL)
@@ -49,29 +50,16 @@ pIdent = try $ token $ do
     else
         return (T.pack name)
 
-{-
-
-
-pIdent = try $ maybeID $ token $ T.pack <$>
-    -- TODO: Don't accept keywords.
-    ((:) <$> (letter <|> char '_')
-         <*> many (letter <|> digit <|> char '_'))
-  where
-    maybeID p = do
-        name <- p
-        if name `elem` ["layout", "struct", "type", "uint", "bool"] then
-            pzero
-        else
-            return name
--}
 
 pIntLit :: Parser Int
-pIntLit = interpIntLit <$> (token $ choice [ pDecimalLit
-                                           , pOctalLit
-                                           , pHexLit
-                                           , pBinaryLit
-                                           ])
-pDecimalLit = (:) <$> oneOf ['1'..'9'] <*> many pDecimalDigit
+pIntLit = interpIntLit <$> (choice $ map try [ pDecimalLit
+                                             , pOctalLit
+                                             , pHexLit
+                                             , pBinaryLit
+                                             ])
+pDecimalLit = pNoRadixDecimalLit <|> pRadixDecimalLit where
+    pNoRadixDecimalLit = (:) <$> oneOf ['1'..'9'] <*> many pDecimalDigit
+    pRadixDecimalLit   = (++) <$> pLitPrefix "dD" <*> many1 pDecimalDigit
 pOctalLit = (++)
     <$> pLitPrefix "oO"
     <*> many1 pOctalDigit
@@ -91,6 +79,7 @@ pLitPrefix radix = do
 getRadix :: Char -> Int
 getRadix r
     | r `elem'` "oO" = 8
+    | r `elem'` "dD" = 10
     | r `elem'` "xX" = 16
     | r `elem'` "bB" = 2
     | otherwise = error $ "invalid radix: " ++ [r]
@@ -100,31 +89,21 @@ getRadix r
     elem' = elem
 
 interpIntLit :: String -> Int
-interpIntLit lit@('1':_) = read lit
 interpIntLit lit@('0':r:ds) = case getRadix r of
-    8 -> read ('0':ds)
-    16 ->  read lit
+    8 -> read lit
+    16 -> read lit
+    10 -> read ds
     2 -> let digits = map (read . (:[])) ds
          in sum $ zipWith shiftL (reverse digits) [0,1..]
-interpIntLit ds =
-    error $ "BUG invalid integer literal passed to interpIntLit: " ++ ds
+interpIntLit lit = read lit
 
 
 pConstField :: Parser LayoutField
-pConstField = try pConstRadixField <|> pConstDecimalField
-pConstRadixField = do
-    width <- interpIntLit <$> pDecimalLit
+pConstField = token $ do
+    width <- pIntLit
     char '\''
-    rest <- pOctalLit <|> pHexLit <|> pBinaryLit
-    let radix = getRadix (head rest)
-    let value = interpIntLit rest
-    return $ FixedL width radix value
-pConstDecimalField = do
-    width <- pDecimalLit
-    char '\''
-    pLitPrefix "dD"
-    value <- interpIntLit <$> pDecimalLit
-    return $ FixedL (interpIntLit width) 10 value
+    value <- pIntLit
+    return (FixedL width value)
 
 
 -- | Parse a whole source file
@@ -153,9 +132,9 @@ pStructType = do
 
 pUIntType = do
     keyword "uint" >> keyword "<"
-    num <- many1 digit
+    num <- token pIntLit
     keyword ">"
-    return $ UIntT $ read num
+    return $ UIntT num
 
 pLayoutDecl :: Parser Decl
 pLayoutDecl = do
@@ -181,4 +160,5 @@ pLayoutField = choice $ map try
         keyword "]"
         return $ SliceL name index1 index2
     , WholeL <$> pIdent
+    , pConstField
     ]

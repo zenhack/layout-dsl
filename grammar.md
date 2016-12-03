@@ -147,11 +147,13 @@ constant. An optional prefix sets a non-decimal base: 0o or | 0O for octal,
 letters a-f and A-F represent values 10 through 15.
 
 ```
-int_lit     = decimal_lit | octal_lit | hex_lit | binary_lit .
-decimal_lit = ( "1" … "9" ) { decimal_digit } .
-octal_lit   = "0" ( "o" | "O" ) octal_digit { octal_digit } .
-hex_lit     = "0" ( "x" | "X" ) hex_digit { hex_digit } .
-binary_lit  = "0" ( "b" | "B" ) binary_digit { binary_digit } .
+int_lit             = decimal_lit | octal_lit | hex_lit | binary_lit .
+decimal_lit         = noradix_decimal_lit | radix_decimal_lit .
+noradix_decimal_lit = ( "1" … "9" ) { decimal_digit } .
+radix_decimal_lit   = "0" ( "d" | "D") decimal_digit { decimal_digit } .
+octal_lit           = "0" ( "o" | "O" ) octal_digit { octal_digit } .
+hex_lit             = "0" ( "x" | "X" ) hex_digit { hex_digit } .
+binary_lit          = "0" ( "b" | "B" ) binary_digit { binary_digit } .
 ```
 
 ```
@@ -166,15 +168,11 @@ binary_lit  = "0" ( "b" | "B" ) binary_digit { binary_digit } .
 
 A constant field is a sequence of digits representing a field in a data
 structure with both constant width and constant value. It is of the
-form `<size>'<radix><value>`
+form `<size>'<value>`. The size is always in bits.
 
 ```
-const_field          = const_radix_field | const_decimal_field .
-const_radix_field    = decimal_lit "'" ( octal_lit | hex_lit | binary_lit ) .
-const_decimal_field  = decimal_lit "'0" ( "d" | "D" ) decimal_lit .
+const_field = int_lit "'" int_lit
 ```
-
-TODO: the decimal radix thing is somewhat inconsistent; should think about this.
 
 # Types
 

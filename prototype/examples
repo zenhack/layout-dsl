@@ -11,4 +11,5 @@ type Bar struct {
 
 layout Bar {
 	substruct
+	2'0b11
 }
