@@ -59,22 +59,18 @@ pIdent = (try $ token $ do
 pIntLit :: Parser Int
 pIntLit = interpIntLit <$>
     ((token $ choice $ map try [ pDecimalLit
-                               , pOctalLit
                                , pHexLit
                                , pBinaryLit
+                               , pOctalLit
                                ]) <?> "integer literal")
 pDecimalLit = pNoRadixDecimalLit <|> pRadixDecimalLit where
-    pNoRadixDecimalLit = (:) <$> oneOf ['1'..'9'] <*> many pDecimalDigit
-    pRadixDecimalLit   = (++) <$> pLitPrefix "dD" <*> many1 pDecimalDigit
-pOctalLit = (++)
-    <$> pLitPrefix "oO"
-    <*> many1 pOctalDigit
-pHexLit = (++)
-    <$> pLitPrefix "xX"
-    <*> many1 pHexDigit
-pBinaryLit = (++)
-    <$> pLitPrefix "bB"
-    <*> many1 pBinaryDigit
+    pNoRadixDecimalLit = (:)  <$> oneOf ['1'..'9'] <*> many  pDecimalDigit
+    pRadixDecimalLit   = (++) <$> pLitPrefix "dD"  <*> many1 pDecimalDigit
+pHexLit    = (++) <$> pLitPrefix "xX" <*> many1 pHexDigit
+pBinaryLit = (++) <$> pLitPrefix "bB" <*> many1 pBinaryDigit
+pOctalLit = try pRadixOctalLit <|> pNoRadixOctalLit where
+    pNoRadixOctalLit = (:)  <$> char '0'        <*> many  pOctalDigit
+    pRadixOctalLit   = (++) <$> pLitPrefix "oO" <*> many1 pOctalDigit
 
 pLitPrefix :: String -> Parser String
 pLitPrefix radix = do
