@@ -26,7 +26,7 @@ executable layout-dsl-prototype
     Layout.Parser
   -- other-extensions:
   build-depends:
-    base >=4.9 && <4.10,
+    base >=4.7 && <4.10,
     parsec,
     text
   -- hs-source-dirs:
@@ -38,7 +38,7 @@ test-suite the-test-suite
   extensions:
     OverloadedStrings
   build-depends:
-    base >=4.9 && <4.10,
+    base >=4.7 && <4.10,
     parsec,
     text,
     HUnit,
