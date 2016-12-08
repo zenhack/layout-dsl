@@ -88,7 +88,7 @@ Example:
     /* Declares a logical view of the data; base is one conceputal
      * field, so we express it that way.
     type GDTEnt struct {
-        // The `unit` type can be parametrized over any bit length:
+        // The `uint` type can be parametrized over any bit length:
         base: uint<32>
         limit: uint<20>
 
