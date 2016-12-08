@@ -6,7 +6,7 @@ module Layout.Ast where
 
 import Data.Text(Text)
 
-data File = File [Decl] deriving(Show)
+data File = File [Decl] deriving(Show, Eq)
 
 -- | A top-level declaration
 data Decl
@@ -19,7 +19,7 @@ data Decl
         Text -- ^ type name
         [LayoutParam]
         [LayoutSpec]
-    deriving(Show)
+    deriving(Show, Eq)
 
 data Type
     = StructT
@@ -27,16 +27,16 @@ data Type
     | UIntT
         Int -- ^ bit width
     | BoolT
-    deriving(Show)
+    deriving(Show, Eq)
 
 data LayoutParam
     = Endian ByteOrder
     | Align Int
-    deriving(Show)
+    deriving(Show, Eq)
 
-data ByteOrder = Little | Big deriving(Show)
+data ByteOrder = Little | Big deriving(Show, Eq)
 
-data LayoutSpec = LayoutSpec [LayoutParam] LayoutField deriving(Show)
+data LayoutSpec = LayoutSpec [LayoutParam] LayoutField deriving(Show, Eq)
 
 data LayoutField
     = SliceL
@@ -51,4 +51,4 @@ data LayoutField
         [LayoutSpec] -- ^ fields
     | WholeL
         Text -- ^ field name
-    deriving(Show)
+    deriving(Show, Eq)

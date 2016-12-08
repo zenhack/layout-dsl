@@ -19,7 +19,8 @@ cabal-version:       >=1.10
 executable layout-dsl-prototype
   main-is:             Main.hs
   extensions:
-    OverloadedStrings
+    OverloadedStrings,
+    DoAndIfThenElse
   other-modules:
     Layout.Ast,
     Layout.Parser
@@ -29,4 +30,20 @@ executable layout-dsl-prototype
     parsec,
     text
   -- hs-source-dirs:
+  default-language:    Haskell2010
+
+test-suite the-test-suite
+  type: exitcode-stdio-1.0
+  main-is: TestMain.hs
+  extensions:
+    OverloadedStrings
+  build-depends:
+    base >=4.9 && <4.10,
+    parsec,
+    text,
+    HUnit,
+    QuickCheck,
+    test-framework,
+    test-framework-hunit,
+    test-framework-quickcheck2
   default-language:    Haskell2010
