@@ -6,6 +6,10 @@ module Layout.Parser where
 -- implementation closely follow the grammar in ../grammar.md. This should make
 -- it easier to verify that the implementation is correct.
 
+-- These are in Prelude on more recent versions of base, but not older ones; we
+-- may as well import them:
+import Control.Applicative ((<$>), (<*), (<*>), (*>))
+
 import Control.Monad (void)
 import Data.Bits(shiftL)
 import Text.ParserCombinators.Parsec hiding(token)
