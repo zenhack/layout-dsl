@@ -86,7 +86,7 @@ For each data type, we define two things:
 Example:
 
     /* Declares a logical view of the data; base is one conceputal
-     * field, so we express it that way.
+     * field, so we express it that way. */
     type GDTEnt struct {
         // The `uint` type can be parametrized over any bit length:
         base: uint<32>
