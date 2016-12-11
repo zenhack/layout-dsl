@@ -157,9 +157,13 @@ hex_lit             = "0" ( "x" | "X" ) hex_digit { hex_digit } .
 binary_lit          = "0" ( "b" | "B" ) binary_digit { binary_digit } .
 ```
 
+Examples:
+
 ```
 42
+0D42
 0600
+0o600
 0xBadFace
 170141183460469231731687303715884105727
 0b11010101
