@@ -110,7 +110,7 @@ Example:
      * Endianness is unspecified by default, but if left unspecified
      * may only be used as part of a larger structure.
      */
-    layout(little) GDTEnt {
+    layout GDTEnt (little) {
         // Denotes the bottom 16 bits of the limit field. Can be specified as
         // either [hi:lo] or [lo:hi]. We allow both to make transcribing
         // from hardware manuals easier.
@@ -161,14 +161,14 @@ As an example, suppose we have some sort of packet, with big-endian
 headers and trailers, but whose payload is little endian. We might have a
 layout like this:
 
-    layout(big) Packet {
+    layout Packet (big) {
         type[0:4]
         0'b4
         total_len
         src_addr
         dest_addr
         // other header fields
-        (little) payload {
+        payload (little) {
             foo[0:16]
             bar[0:32]
             3'b0
@@ -196,7 +196,7 @@ structure that *does* define the overall endianness.
 Alignment could be specified with an annotation similar to that used for
 endianness, e.g:
 
-    layout(little,align=8B) Foo {
+    layout Foo (little,align=8B) {
         // ...
     }
 
@@ -214,11 +214,11 @@ report them as errors, e.g:
         y: bool
     }
 
-    layout(align=4) foo {
+    layout foo (align=4) {
         x
     }
 
-    layout(align=8) bar {
+    layout bar (align=8) {
         y 63'b0
     }
 

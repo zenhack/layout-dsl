@@ -184,15 +184,15 @@ const_field = int_lit "'" int_lit
 Types define the *logical* structure of values.
 
 ```
-Type     = TypeName | TypeLit .
-TypeName = identifier .
-TypeLit  = StructType | UIntType | BoolType
+Type          = identifier [ TypeParamList ] | TypeLit .
+TypeParam     = identifier | int_lit
+TypeParamList = "<" { TypeParam "," } [ TypeParam ] ">"
+TypeLit       = StructType | UIntType | BoolType
 
 StructType = "struct" "{" { IdentifierList ":" Type } "}" .
 UIntType   = "uint" "<" int_lit ">" .
-BoolType   = "bool" .
 
-IdentifierList = identifier { "," identifier } .
+IdentifierList = { identifier "," }  [ identifier ] .
 ```
 
 # Layouts
@@ -202,12 +202,33 @@ optional annotations specifying things like endianness and alignment, and a
 physical mapping of fields in the corresponding type declaration.
 
 ```
-Layout       = [ "(" [ AnnotationList ] ")" ] LayoutField .
-LayoutField  = const_field | NamedField
-NamedField = identifier [ LayoutSlice | LayoutStruct ] .
+Layout       = [ AnnotationList ] LayoutField .
+LayoutField  = const_field | NamedField .
+NamedField   = identifier [ LayoutSlice | LayoutStruct ] .
 LayoutStruct = "{" { Layout } "}" .
 LayoutSlice  = "[" int_lit ":" int_lit "]" .
 
-AnnoationList = Annotation { "," Annotation } .
+AnnoationList = "(" { Annotation "," } [ Annotation ] ")" .
 Anotation     = "big" | "little"  | "align" "=" int_lit .
 ```
+
+# Declarations
+
+Declarations occur at the top level of a file. They bind names to types
+and layouts.
+
+```
+
+Decl = TypeDecl | LayoutDecl
+TypeDecl = "type" identifier [ TypeParamList ] Type
+LayoutDecl = "layout" identifier Layout
+
+```
+
+Each type declaration must have a layout declaration with the same name.
+
+# Predeclared identifers
+
+The identifier "bool" is predeclared, and refers to a boolean type. It's
+size is one bit, and the value 1 stands for true, while 0 stands for
+false.
