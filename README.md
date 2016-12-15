@@ -1,7 +1,6 @@
 [![Build Status][ci-img]][ci]
 
-DSL for describing data layouts. Still in the conceptualization phase;
-there is no code whatsoever yet. This document is Apache-2.0 licensed,
+DSL for describing data layouts. Currently this is Apache-2.0 licensed,
 but future versions/implementations may be under different licenses
 (definitely FOSS); we'll play it by ear.
 
