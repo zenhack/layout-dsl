@@ -29,11 +29,11 @@ main = defaultMain
               , "}"
               ]
           , Right $ File
-              [ TypeDecl "Foo" $ StructT
+              [ TypeDecl "Foo" [] $ StructT
                   [ (["f","g"], UIntT 2)
-                  , (["hello"], BoolT)
+                  , (["hello"], NamedT "bool" [])
                   ]
-              , TypeDecl "Bar" $ StructT
+              , TypeDecl "Bar" [] $ StructT
                   [ (["substruct"], StructT
                        [ (["w","x","y","z"],UIntT 64)
                        ])
@@ -64,15 +64,15 @@ main = defaultMain
               , "    limit[15:0]"
               , "    base[23:0]"
               , "    access {"
-              , "        ac, rw, dc, ex"
-              , "        1'b1"
+              , "        ac rw dc ex"
+              , "        1'0b1"
               , "        privl"
               , "        pr"
               , "    }"
               , ""
               , "    limit[19:16]"
               , "    flags {"
-              , "        2'b0"
+              , "        2'0b0"
               , "        sz"
               , "        gr"
               , "    }"
@@ -80,14 +80,14 @@ main = defaultMain
               , "}"
               ]
           , Right $ File
-              [ TypeDecl "GDTEnt" $ StructT
+              [ TypeDecl "GDTEnt" [] $ StructT
                   [ (["base"], UIntT 32)
                   , (["limit"], UIntT 20)
                   , (["flags"], StructT
-                      [ (["gr", "sz"], BoolT)
+                      [ (["gr", "sz"], NamedT "bool" [])
                       ])
                   , (["access"], StructT
-                      [ (["ac", "rw", "dc", "ex", "pr"], BoolT)
+                      [ (["ac", "rw", "dc", "ex", "pr"], NamedT "bool" [])
                       , (["privl"], UIntT 2)
                       ])
                   ]

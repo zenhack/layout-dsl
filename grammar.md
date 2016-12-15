@@ -148,7 +148,7 @@ and any literal starting with a digit 1-9 is interpreted as decimal. In
 hexadecimal literals, letters a-f and A-F represent values 10 through 15.
 
 ```
-int_lit             = decimal_lit | octal_lit | hex_lit | binary_lit .
+int_lit             = decimal_lit | octal_lit | hex_lit | binary_lit | "0" .
 decimal_lit         = noradix_decimal_lit | radix_decimal_lit .
 noradix_decimal_lit = ( "1" … "9" ) { decimal_digit } .
 radix_decimal_lit   = "0" ( "d" | "D") decimal_digit { decimal_digit } .
@@ -187,7 +187,7 @@ Types define the *logical* structure of values.
 Type          = identifier [ TypeParamList ] | TypeLit .
 TypeParam     = identifier | int_lit
 TypeParamList = "<" { TypeParam "," } [ TypeParam ] ">"
-TypeLit       = StructType | UIntType | BoolType
+TypeLit       = StructType | UIntType
 
 StructType = "struct" "{" { IdentifierList ":" Type } "}" .
 UIntType   = "uint" "<" int_lit ">" .

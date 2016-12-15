@@ -5,26 +5,29 @@ module Layout.Parser where
 -- helpers than might otherwise sense, favoring instead having this
 -- implementation closely follow the grammar in ../grammar.md. This should make
 -- it easier to verify that the implementation is correct.
+--
+-- Parts of the lexer are named l*, while parts of the parser are named p*
 
 -- These are in Prelude on more recent versions of base, but not older ones; we
 -- may as well import them:
 import Control.Applicative ((<$>), (<*), (<*>), (*>))
 
-import Control.Monad (void)
+import Control.Monad (void, when)
 import Data.Bits(shiftL)
+import Data.Char (toLower)
 import Text.ParserCombinators.Parsec hiding(token)
 import qualified Data.Text as T
 import Data.Text (Text)
 import Layout.Ast
 
 
-pLetter, pBinaryDigit, pDecimalDigit, pOctalDigit, pHexDigit :: Parser Char
+lLetter, lBinaryDigit, lDecimalDigit, lOctalDigit, lHexDigit :: Parser Char
 
-pLetter = oneOf $ ['A'..'Z'] ++ ['a'..'z'] ++ ['_']
-pBinaryDigit = oneOf "01"
-pDecimalDigit = oneOf ['0'..'9']
-pOctalDigit = oneOf ['0'..'7']
-pHexDigit = oneOf $ ['0'..'9'] ++ ['A'..'F'] ++ ['a'..'f']
+lLetter = oneOf $ ['A'..'Z'] ++ ['a'..'z'] ++ ['_']
+lBinaryDigit = oneOf "01"
+lDecimalDigit = oneOf ['0'..'9']
+lOctalDigit = oneOf ['0'..'7']
+lHexDigit = oneOf $ ['0'..'9'] ++ ['A'..'F'] ++ ['a'..'f']
 
 -- Misc. stuff to ignore:
 
@@ -40,127 +43,112 @@ blockComment = do
     void $ manyTill anyChar (try $ string "*/")
 whitespaceOrComment = comment <|> try whitespace
 
+-- | @commaList p@ parses a list of p separated by commas, and optionally
+--   ending with a comma.
+commaList :: Parser a -> Parser [a]
+commaList p = do
+    first <- many $ try (p <* keyword ",")
+    last <- option [] ((:[]) <$> try p)
+    return $ first ++ last
 
 -- | @token p@ parses @p@ with optional trailing whitespace/comments.
 token :: Parser a -> Parser a
-token p = p <* many whitespaceOrComment
+token p = try (p <* many whitespaceOrComment)
 
 -- | @keyword p@ parses the literal token @p@.
 keyword :: String -> Parser ()
 keyword = void . token . string
 
-pIdent :: Parser Text
-pIdent = (try $ token $ do
-    first <- pLetter
-    rest <- many (pLetter <|> pDecimalDigit)
-    let name = first:rest
-    if name `elem` ["layout", "struct", "type", "uint", "bool"] then
-        pzero
-    else
-        return (T.pack name)) <?> "identifier"
+-- | list of reserved words that would otherwise be legal identifiers
+reservedWords =
+    [ "layout"
+    , "struct"
+    , "type"
+    , "uint"
+    ]
 
 
-pIntLit :: Parser Int
-pIntLit = interpIntLit <$>
-    ((token $ choice $ map try [ pDecimalLit
-                               , pHexLit
-                               , pBinaryLit
-                               , pOctalLit
-                               ]) <?> "integer literal")
-pDecimalLit = pNoRadixDecimalLit <|> pRadixDecimalLit where
-    pNoRadixDecimalLit = (:)  <$> oneOf ['1'..'9'] <*> many  pDecimalDigit
-    pRadixDecimalLit   = (++) <$> pLitPrefix "dD"  <*> many1 pDecimalDigit
-pHexLit    = (++) <$> pLitPrefix "xX" <*> many1 pHexDigit
-pBinaryLit = (++) <$> pLitPrefix "bB" <*> many1 pBinaryDigit
-pOctalLit = try pRadixOctalLit <|> pNoRadixOctalLit where
-    pNoRadixOctalLit = (:)  <$> char '0'        <*> many  pOctalDigit
-    pRadixOctalLit   = (++) <$> pLitPrefix "oO" <*> many1 pOctalDigit
-
-pLitPrefix :: String -> Parser String
-pLitPrefix radix = do
-    char '0'
-    r <- oneOf radix
-    return ['0', r]
-
-getRadix :: Char -> Int
-getRadix r
-    | r `elem'` "oO" = 8
-    | r `elem'` "dD" = 10
-    | r `elem'` "xX" = 16
-    | r `elem'` "bB" = 2
-    | otherwise = error $ "invalid radix: " ++ [r]
+-- Parse an identifier. This fails if the token is a reserved word.
+pIdent = token (do
+            name <- pMaybeIdentifier
+            when (name `elem` reservedWords) pzero
+            return $ T.pack name)
+    <?> "identifier"
   where
-    -- Supriing to me, but GHC fails to infer the types above without this:
-    elem' :: Char -> String -> Bool
-    elem' = elem
+    -- Parse something which *may* be an identifier, if it is not a reserved word.
+    pMaybeIdentifier = ((:) <$> lLetter <*> many (lLetter <|> lDecimalDigit))
 
-interpIntLit :: String -> Int
-interpIntLit lit@('0':r:ds) = case getRadix r of
-    8 -> read lit
-    16 -> read lit
-    10 -> read ds
-    2 -> let digits = map (read . (:[])) ds
-         in sum $ zipWith shiftL (reverse digits) [0,1..]
-interpIntLit lit = read lit
 
+lIntLit            = choice $ map try [ lDecimalLit
+                                      , lOctalLit
+                                      , lHexLit
+                                      , lBinaryLit
+                                      , string "0" >> return 0
+                                      ]
+lDecimalLit        = lNoradixDecimalLit <|> lRadixDecimalLit
+lNoradixDecimalLit = read <$> ((:) <$> oneOf ['1'..'9'] <*> many lDecimalDigit)
+lRadixDecimalLit   = char '0' >> oneOf "dD"  >> (read <$> many1 lDecimalDigit)
+lOctalLit          = read <$> (cons2 <$> char '0'
+                                     <*> option 'o' (oneOf "oO")
+                                     <*> many1 lOctalDigit)
+lHexLit            = read <$> (cons2 <$> char '0'
+                                     <*> oneOf "xX"
+                                     <*> many1 lHexDigit)
+lBinaryLit         = char '0' >> oneOf "bB"  >> (readBin <$> many1 lBinaryDigit)
+
+cons2 x y zs = x:y:zs
+
+readBin ds = sum $ zipWith shiftL (reverse digits) [0,1..]
+  where
+    digits = map interpBit ds
+    interpBit b = case b of
+        '0' -> 0
+        '1' -> 1
+
+pIntLit = token lIntLit
 
 pConstField :: Parser LayoutField
 pConstField = token $ do
-    width <- pIntLit
+    width <- lIntLit
     char '\''
-    value <- pIntLit
-    return (FixedL width value)
+    value <- lIntLit
+    return $ FixedL width value
 
-
--- | Parse a whole source file
-pFile = many whitespaceOrComment *> (File <$> many pDecl) <* eof
-
-
-pDecl :: Parser Decl
-pDecl = try pTypeDecl <|> pLayoutDecl
-
-pTypeDecl :: Parser Decl
-pTypeDecl = keyword "type" >> TypeDecl <$> pIdent <*> pType
 
 pType :: Parser Type
-pType = choice (map try [ pUIntType
-                        , pStructType
-                        , keyword "bool" >> return BoolT
-                        ])
-
+pType = (NamedT <$> pIdent <*> option [] pTypeParamList) <|> pTypeLit
+pTypeParam = choice
+    [ TypeVar <$> pIdent
+    , TypeNum <$> pIntLit
+    ]
+pTypeParamList = keyword "<" *> commaList pTypeParam <* keyword ">"
+pTypeLit = pStructType <|> pUIntType
 pStructType = do
     keyword "struct" >> keyword "{"
-    fields <- many1 $ do
-        names <- pIdent `sepBy` token (char ',')
-        keyword ":"
-        ty <- pType
-        return (names, ty)
+    fields <- many ((,) <$> (pIdentList <* keyword ":") <*> pType)
     keyword "}"
     return $ StructT fields
+pUIntType = UIntT <$> (keyword "uint" >> keyword "<" >> pIntLit <* keyword ">")
 
-pUIntType = do
-    keyword "uint" >> keyword "<"
-    num <- pIntLit
-    keyword ">"
-    return $ UIntT num
+pIdentList = commaList pIdent
 
-pLayoutDecl :: Parser Decl
-pLayoutDecl = do
-    keyword "layout"
-    params <- option [] pAnnotationList
+pLayout = LayoutSpec <$> option [] pAnnotationList
+                     <*> pLayoutField
+pLayoutField = pConstField <|> pNamedField
+pNamedField = do
     name <- pIdent
-    keyword "{"
-    specs <- many pLayoutSpec
-    keyword "}"
-    return (LayoutDecl name params specs)
-
-pAnnotationList :: Parser [LayoutParam]
-pAnnotationList = do
-    keyword "("
-    ret <- many (pAnnotation <* keyword ",")
-    last <- option [] ((:[]) <$> pAnnotation)
-    keyword ")"
-    return $ ret ++ last
+    choice [ do (l, r) <- pLayoutSlice
+                return $ SliceL name l r
+           , StructL name <$> (keyword "{" *> many pLayout <* keyword "}")
+           , return $ WholeL name
+           ]
+pLayoutSlice = do
+    keyword "["
+    l <- pIntLit
+    keyword ":"
+    r <- pIntLit
+    keyword "]"
+    return (l, r)
 
 pAnnotation :: Parser LayoutParam
 pAnnotation = choice
@@ -169,27 +157,29 @@ pAnnotation = choice
     , Align <$> (keyword "align" >> keyword "=" >> pIntLit)
     ]
 
+pAnnotationList :: Parser [LayoutParam]
+pAnnotationList = keyword "(" *> commaList pAnnotation <* keyword ")"
 
-pLayoutSpec = LayoutSpec [] <$> pLayoutField
+-- | Parse a whole source file
+pFile = many whitespaceOrComment *> (File <$> many pDecl) <* eof
 
 
-pLayoutField :: Parser LayoutField
-pLayoutField = pConstField <|> pNamedField
+pDecl :: Parser Decl
+pDecl = pTypeDecl <|> pLayoutDecl
 
-pNamedField = do
+pTypeDecl :: Parser Decl
+pTypeDecl = do
+    keyword "type"
     name <- pIdent
-    mod <- choice (map try [ pLayoutSlice
-                           , pLayoutStruct
-                           , return WholeL
-                           ])
-    return (mod name)
+    params <- option [] (keyword "<" *> many pIdent <* keyword ">")
+    TypeDecl name params <$> pType
 
-pLayoutSlice = do
-    keyword "["
-    index1 <- pIntLit
-    keyword ":"
-    index2 <- pIntLit
-    keyword "]"
-    return (\name -> SliceL name index1 index2)
-
-pLayoutStruct = pzero
+pLayoutDecl :: Parser Decl
+pLayoutDecl = do
+    keyword "layout"
+    name <- pIdent
+    params <- option [] pAnnotationList
+    keyword "{"
+    specs <- many pLayout
+    keyword "}"
+    return (LayoutDecl name params specs)

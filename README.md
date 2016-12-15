@@ -121,12 +121,12 @@ Example:
         access {
             // Without the slice notation, we embed the whole field.
             // Booleans are assumed 1 bit.
-            ac, rw, dc, ex
+            ac rw dc ex
 
             // A bit that is always 1. Syntax is Verilog inspired, of
             // the form <length>'<radix><value>. The radix `b` is
             // base 2.
-            1'b1
+            1'0b1
 
             privl // 2 bits wide; derived from the type declaration.
             pr
@@ -134,7 +134,7 @@ Example:
 
         limit[19:16]
         flags {
-            2'b0 // 2 bit field with the value 0.
+            2'0b0 // 2 bit field with the value 0.
             sz
             gr
         }
@@ -185,7 +185,7 @@ e.g:
     layout Foo {
         bar
         baz[0:3]
-        0'x3f
+        6'0x3f
     }
 
 In this case, the data type can only be used as part of a larger

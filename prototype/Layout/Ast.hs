@@ -13,6 +13,7 @@ data Decl
     -- logical layout declaration
     = TypeDecl
         Text -- ^ type name
+        [Text] -- ^ type parameter names
         Type -- ^ definition
     -- | Physical layout declaration
     | LayoutDecl
@@ -26,7 +27,12 @@ data Type
         [([Text], Type)] -- ^ (fieldname, type) pairs
     | UIntT
         Int -- ^ bit width
-    | BoolT
+    | NamedT Text [TypeParam]
+    deriving(Show, Eq)
+
+data TypeParam
+    = TypeVar Text
+    | TypeNum Int
     deriving(Show, Eq)
 
 data LayoutParam
