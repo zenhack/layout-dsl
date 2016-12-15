@@ -147,12 +147,28 @@ pUIntType = do
 pLayoutDecl :: Parser Decl
 pLayoutDecl = do
     keyword "layout"
-     -- TODO: layout params
+    params <- option [] pAnnotationList
     name <- pIdent
     keyword "{"
     specs <- many pLayoutSpec
     keyword "}"
-    return (LayoutDecl name [] specs)
+    return (LayoutDecl name params specs)
+
+pAnnotationList :: Parser [LayoutParam]
+pAnnotationList = do
+    keyword "("
+    ret <- many (pAnnotation <* keyword ",")
+    last <- option [] ((:[]) <$> pAnnotation)
+    keyword ")"
+    return $ ret ++ last
+
+pAnnotation :: Parser LayoutParam
+pAnnotation = choice
+    [ keyword "little" >> return (Endian Little)
+    , keyword "big" >> return (Endian Big)
+    , Align <$> (keyword "align" >> keyword "=" >> pIntLit)
+    ]
+
 
 pLayoutSpec = LayoutSpec [] <$> pLayoutField
 
