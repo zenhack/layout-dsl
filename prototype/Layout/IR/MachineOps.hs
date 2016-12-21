@@ -27,4 +27,4 @@ data BinOp
     | ShiftR
 
 data GetStmt = GetStmt (Expr ByteN)
-data SetStmt = PutStmt Word64 (Expr Arg)
+data SetStmt = SetStmt Word64 (Expr Arg)
