@@ -20,7 +20,7 @@ interpExpr interpSrc (Src src) = interpSrc src
 interpExpr interpSrc (BinOp op l r) =
     "(" <> interpExpr interpSrc l <> ") "
     <> interpBinOp op <>
-    " (" <> interpExpr iterpSrc r <> ")"
+    " (" <> interpExpr interpSrc r <> ")"
 interpExpr interpSrc (BitNot expr) = "~(" <> interpExpr interpSrc expr <> ")"
 interpExpr interpSrc (Cast n expr) =
     "(uint" <> T.pack (show n) <> "_t)(" <> interpExpr interpSrc expr <> ")"

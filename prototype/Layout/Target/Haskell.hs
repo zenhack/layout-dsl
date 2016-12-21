@@ -8,6 +8,8 @@ import Data.Bits
 import Data.Word
 import Layout.IR.MachineOps
 
+import qualified Data.ByteString as B
+
 
 interpByteN :: B.ByteString -> ByteN -> Word64
 interpByteN bs (ByteN n) = fromIntegral $ B.index bs n
@@ -30,8 +32,10 @@ interpExpr _ (Const n) = n
 
 interpBinOp BitAnd = (.&.)
 interpBinOp BitOr  = (.|.)
-interpBinOp ShiftL = shiftL
-interpBinOp ShiftR = shiftR
+-- The type of shiftL/R is (Bits a) => a -> Int -> a, so we need to convert the
+-- right-hand side:
+interpBinOp ShiftL = \l r -> l `shiftL` (fromIntegral r)
+interpBinOp ShiftR = \l r -> l `shiftR` (fromIntegral r)
 
 interpGet :: B.ByteString -> Expr ByteN -> Word64
 interpGet bs = interpExpr (interpByteN bs)

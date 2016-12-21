@@ -23,12 +23,16 @@ executable layout-dsl-prototype
     DoAndIfThenElse
   other-modules:
     Layout.Ast,
-    Layout.Parser
+    Layout.Parser,
+    Layout.IR.MachineOps,
+    Layout.Target.C,
+    Layout.Target.Haskell
   -- other-extensions:
   build-depends:
     base >=4.7 && <4.10,
     parsec,
-    text
+    text,
+    bytestring
   -- hs-source-dirs:
   default-language:    Haskell2010
 
@@ -41,6 +45,7 @@ test-suite the-test-suite
     base >=4.7 && <4.10,
     parsec,
     text,
+    bytestring,
     HUnit,
     test-framework,
     test-framework-hunit
