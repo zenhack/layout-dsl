@@ -18,7 +18,7 @@ cabal-version:       >=1.10
 
 executable layout-dsl-prototype
   main-is:             Main.hs
-  extensions:
+  default-extensions:
     OverloadedStrings,
     DoAndIfThenElse
   other-modules:
@@ -39,7 +39,7 @@ executable layout-dsl-prototype
 test-suite the-test-suite
   type: exitcode-stdio-1.0
   main-is: TestMain.hs
-  extensions:
+  default-extensions:
     OverloadedStrings
   build-depends:
     base >=4.7 && <4.10,
