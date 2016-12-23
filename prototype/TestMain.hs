@@ -8,6 +8,7 @@ import Tests.IR.RangeMap (rangeMapTests)
 -- actual tests.
 import qualified Layout.IR.MachineOps
 import qualified Layout.IR.RangeMap
+import qualified Layout.IR.SubSurface
 import qualified Layout.Target.C
 import qualified Layout.Target.Haskell
 

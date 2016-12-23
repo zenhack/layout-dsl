@@ -26,6 +26,7 @@ executable layout-dsl-prototype
     Layout.Parser,
     Layout.IR.MachineOps,
     Layout.IR.RangeMap,
+    Layout.IR.SubSurface,
     Layout.Target.C,
     Layout.Target.Haskell
   -- other-extensions:
