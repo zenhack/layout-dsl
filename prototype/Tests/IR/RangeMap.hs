@@ -1,6 +1,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Tests.IR.RangeMap where
 
+import Control.Applicative ((<$>), (<*>))
 import Test.Framework (testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
