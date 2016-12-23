@@ -47,6 +47,9 @@ test-suite the-test-suite
     text,
     bytestring,
     HUnit,
+    QuickCheck,
     test-framework,
-    test-framework-hunit
+    test-framework-hunit,
+    test-framework-quickcheck2,
+    quickcheck-instances
   default-language:    Haskell2010
