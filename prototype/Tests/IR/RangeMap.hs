@@ -34,12 +34,6 @@ instance Functor Indexed where
 
 totalSize :: (bucket RangeMap -> RangeMap) -> FieldMap bucket -> Int
 totalSize stripBucket = sum . map rangeLen . allRangeMaps stripBucket
-{-
-totalSize stripBucket (FieldMap fm) =
-    sum $ map sum lengthLists
-  where
-    lengthLists = map (map (rangeLen . stripBucket) . snd) fm
--}
 
 allRangeMaps stripBucket (FieldMap fm) = concat $ map (map stripBucket . snd) fm
 
