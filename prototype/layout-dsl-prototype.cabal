@@ -24,6 +24,7 @@ executable layout-dsl-prototype
   other-modules:
     Layout.Ast,
     Layout.Parser,
+    Layout.Validate,
     Layout.IR.MachineOps,
     Layout.IR.RangeMap,
     Layout.IR.SubSurface,
@@ -32,6 +33,8 @@ executable layout-dsl-prototype
   -- other-extensions:
   build-depends:
     base >=4.7 && <4.10,
+    containers,
+    mtl,
     parsec,
     text,
     bytestring
@@ -45,6 +48,8 @@ test-suite the-test-suite
     OverloadedStrings
   build-depends:
     base >=4.7 && <4.10,
+    containers,
+    mtl,
     parsec,
     text,
     bytestring,
