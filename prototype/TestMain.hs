@@ -2,6 +2,7 @@ module Main where
 
 import Test.Framework (defaultMain)
 import Tests.Parser (parseTests)
+import Tests.Validate (validateTests)
 import Tests.IR.RangeMap (rangeMapTests)
 
 -- Just so we're building these at all; will probably remove once we have
@@ -14,4 +15,8 @@ import qualified Layout.Target.C
 import qualified Layout.Target.Haskell
 
 main :: IO ()
-main = defaultMain [parseTests, rangeMapTests]
+main = defaultMain
+    [ parseTests
+    , rangeMapTests
+    , validateTests
+    ]

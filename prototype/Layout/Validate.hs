@@ -6,8 +6,9 @@ translation stages.
 -}
 module Layout.Validate where
 
-import Control.Monad.State (MonadState, get, put)
-import Control.Monad.Writer (MonadWriter, tell)
+import Control.Monad.State (MonadState, get, put, StateT(..))
+import Control.Monad.Writer (MonadWriter, tell, WriterT(..))
+import Control.Monad.Identity (Identity(..))
 
 import Data.Text(Text)
 import qualified Layout.Ast as Ast
@@ -19,28 +20,36 @@ data ValidationError
     | OrphanDecl Ast.Decl
     | NoSuchType Text
     | ArityMismatch Text
+    deriving(Show, Eq)
 
 data SymbolTable = SymbolTable
     { types   :: M.Map Text Ast.TypeDecl
     , layouts :: M.Map Text Ast.LayoutDecl
     } deriving(Show, Eq)
 
--- | Check for orphan declarations, i.e. type declarations without a
--- corresponding layout, or vice versa.
-checkOrphans :: (MonadState SymbolTable m, MonadWriter [ValidationError] m) => m ()
-checkOrphans = do
-    SymbolTable types layouts <- get
-    tell $ map OrphanDecl $
-        (map Ast.TypeD   $ M.elems $ types   `M.difference` layouts) ++
-        (map Ast.LayoutD $ M.elems $ layouts `M.difference` types)
+-- | Compile a of declarations into the symbol table, validating it
+-- along the way. Return a Left if any errors occur.
+buildSyms :: [(Text, Ast.Decl)] -> Either [ValidationError] SymbolTable
+buildSyms decls = case errs of
+    [] -> Right syms
+    _ -> Left errs
+  where
+    (((), errs), syms) = runM emptySyms $ do
+        collectDeclsM decls
+        checkOrphansM
+        checkAritiesM
+    initM     = WriterT $ StateT $ \s -> Identity (((), []), s)
+    runM s m  = runIdentity $ runStateT (runWriterT $ initM >> m) s
+    emptySyms = SymbolTable { types   = M.empty
+                            , layouts = M.empty
+                            }
 
-
--- | Compile a of declarations into the symbol table. Along the way, we detect
--- duplicate declarations, which are reported via the MonadWriter instance.
-buildSyms :: (MonadState SymbolTable m, MonadWriter [ValidationError] m)
+-- | Collect declarations into the SymbolTable state. Errors are built up
+-- using a MonadWriter.
+collectDeclsM :: (MonadState SymbolTable m, MonadWriter [ValidationError] m)
     => [(Text, Ast.Decl)] -> m ()
-buildSyms [] = return ()
-buildSyms ((name, decl):decls) = do
+collectDeclsM [] = return ()
+collectDeclsM ((name, decl):decls) = do
     syms <- get
     case decl of
         (Ast.TypeD tyDecl) -> do
@@ -49,12 +58,21 @@ buildSyms ((name, decl):decls) = do
         (Ast.LayoutD layoutDecl) -> do
             checkDups name (layouts syms) decl
             put $ syms { layouts = M.insert name layoutDecl (layouts syms) }
-    buildSyms decls
+    collectDeclsM decls
   where
     checkDups name dict decl
         | name `M.member` dict = tell [DuplicateDecl name decl]
         | otherwise = return ()
 
+
+-- | Check for orphan declarations in the symbol table, i.e. type declarations
+-- without a corresponding layout, or vice versa.
+checkOrphansM :: (MonadState SymbolTable m, MonadWriter [ValidationError] m) => m ()
+checkOrphansM = do
+    SymbolTable types layouts <- get
+    tell $ map OrphanDecl $
+        (map Ast.TypeD   $ M.elems $ types   `M.difference` layouts) ++
+        (map Ast.LayoutD $ M.elems $ layouts `M.difference` types)
 
 -- | Return the arity (number of parameters) of a type declaration in the symbol
 -- table, or Nothing if it is not present.
@@ -62,6 +80,10 @@ arity :: SymbolTable -> Text -> Maybe Int
 arity syms name = do
     (Ast.TypeDecl params _) <- M.lookup name (types syms)
     return $ length params
+
+checkAritiesM = do
+    syms@(SymbolTable types _) <- get
+    mapM_ (\(Ast.TypeDecl _ ty) -> checkArities syms ty) types
 
 -- | @checkArities syms typ@ Checks that all of the references to any type
 -- by name in @typ@ (a) correspond to an actually declared type in the symbol
