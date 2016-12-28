@@ -35,11 +35,12 @@ checkOrphans = do
         (map Ast.LayoutD $ M.elems $ layouts `M.difference` types)
 
 
--- | Sort a list of declarations into the symbol table.
-sortDecls :: (MonadState SymbolTable m, MonadWriter [ValidationError] m)
+-- | Compile a of declarations into the symbol table. Along the way, we detect
+-- duplicate declarations, which are reported via the MonadWriter instance.
+buildSyms :: (MonadState SymbolTable m, MonadWriter [ValidationError] m)
     => [(Text, Ast.Decl)] -> m ()
-sortDecls [] = return ()
-sortDecls ((name, decl):decls) = do
+buildSyms [] = return ()
+buildSyms ((name, decl):decls) = do
     syms <- get
     case decl of
         (Ast.TypeD tyDecl) -> do
@@ -48,29 +49,27 @@ sortDecls ((name, decl):decls) = do
         (Ast.LayoutD layoutDecl) -> do
             checkDups name (layouts syms) decl
             put $ syms { layouts = M.insert name layoutDecl (layouts syms) }
-    sortDecls decls
+    buildSyms decls
   where
     checkDups name dict decl
         | name `M.member` dict = tell [DuplicateDecl name decl]
         | otherwise = return ()
 
 
+-- | Return the arity (number of parameters) of a type declaration in the symbol
+-- table, or Nothing if it is not present.
+arity :: SymbolTable -> Text -> Maybe Int
+arity syms name = do
+    (Ast.TypeDecl params _) <- M.lookup name (types syms)
+    return $ length params
 
--- | @arities types@ is a map from names of type declarations to the lengths of
--- their parameter lists.
-arities :: M.Map Text Ast.TypeDecl -> M.Map Text Int
-arities types = M.map arity types where
-    arity (Ast.TypeDecl params _) = length params
-
--- | @checkArities arities typ@ Checks that all of the references to any type
--- by name in @typ@ (a) correspond to an actually declared type, and (b) match
--- the parameter count of the declaration.
---
--- @arities@ is a map from the names of the types to their arities.
-checkArities :: (MonadWriter [ValidationError] m) => M.Map Text Int -> Ast.Type -> m ()
-checkArities arities (Ast.NamedT name params)
-    | M.lookup name arities /= Just (length params) = tell $ [ArityMismatch name]
-    | M.lookup name arities == Nothing = tell $ [NoSuchType name]
-checkArities arities (Ast.StructT fields) =
-    mapM_ (checkArities arities . snd) fields
+-- | @checkArities syms typ@ Checks that all of the references to any type
+-- by name in @typ@ (a) correspond to an actually declared type in the symbol
+-- table, and (b) match the parameter count of the declaration.
+checkArities :: (MonadWriter [ValidationError] m) => SymbolTable -> Ast.Type -> m ()
+checkArities syms (Ast.NamedT name params)
+    | arity syms name == Nothing = tell $ [NoSuchType name]
+    | arity syms name /= Just (length params) = tell $ [ArityMismatch name]
+checkArities syms (Ast.StructT fields) =
+    mapM_ (checkArities syms . snd) fields
 checkArities _ _ = return ()
