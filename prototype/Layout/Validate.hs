@@ -17,6 +17,8 @@ import qualified Data.Map.Strict as M
 data ValidationError
     = DuplicateDecl Ast.Decl
     | OrphanDecl Ast.Decl
+    | NoSuchType Text
+    | ArityMismatch Text
 
 type DeclMap = M.Map Text Ast.Decl
 
@@ -50,3 +52,26 @@ sortDecls (decl:decls) = do
     checkDups name dict decl
         | name `M.member` dict = tell [DuplicateDecl decl]
         | otherwise = return ()
+
+
+
+-- | @arities types@ is a map from names of type declarations to the lengths of
+-- their parameter lists. All of the values in @types@ must be type
+-- declarations, not layout declarations.
+arities :: DeclMap -> M.Map Text Int
+arities types = M.map arity types where
+    arity (Ast.TypeDecl _ params _) = length params
+    arity _ = error "arity called on non-type declaration."
+
+-- | @checkArities arities typ@ Checks that all of the references to any type
+-- by name in @typ@ (a) correspond to an actually declared type, and (b) match
+-- the parameter count of the declaration.
+--
+-- @arities@ is a map from the names of the types to their arities.
+checkArities :: (MonadWriter [ValidationError] m) => M.Map Text Int -> Ast.Type -> m ()
+checkArities arities (Ast.NamedT name params)
+    | M.lookup name arities /= Just (length params) = tell $ [ArityMismatch name]
+    | M.lookup name arities == Nothing = tell $ [NoSuchType name]
+checkArities arities (Ast.StructT fields) =
+    mapM_ (checkArities arities . snd) fields
+checkArities _ _ = return ()
