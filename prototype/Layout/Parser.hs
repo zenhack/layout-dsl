@@ -164,17 +164,18 @@ pAnnotationList = keyword "(" *> commaList pAnnotation <* keyword ")"
 pFile = many whitespaceOrComment *> (File <$> many pDecl) <* eof
 
 
-pDecl :: Parser Decl
+pDecl :: Parser (Text, Decl)
 pDecl = pTypeDecl <|> pLayoutDecl
 
-pTypeDecl :: Parser Decl
+pTypeDecl :: Parser (Text, Decl)
 pTypeDecl = do
     keyword "type"
     name <- pIdent
     params <- option [] (keyword "<" *> many pIdent <* keyword ">")
-    TypeDecl name params <$> pType
+    ty <- pType
+    return (name, TypeD $ TypeDecl params ty)
 
-pLayoutDecl :: Parser Decl
+pLayoutDecl :: Parser (Text, Decl)
 pLayoutDecl = do
     keyword "layout"
     name <- pIdent
@@ -182,4 +183,4 @@ pLayoutDecl = do
     keyword "{"
     specs <- many pLayout
     keyword "}"
-    return (LayoutDecl name params specs)
+    return (name, LayoutD $ LayoutDecl params specs)

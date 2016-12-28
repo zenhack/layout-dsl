@@ -27,20 +27,20 @@ parseTests = testGroup "Parse Tests" $ hUnitTestToTests $ TestList $ map parseCo
           , "}"
           ]
       , Right $ File
-          [ TypeDecl "Foo" [] $ StructT
+          [ ("Foo", TypeD $ TypeDecl [] $ StructT
               [ (["f","g"], UIntT 2)
               , (["hello"], NamedT "bool" [])
-              ]
-          , TypeDecl "Bar" [] $ StructT
+              ])
+          , ("Bar", TypeD $ TypeDecl [] $ StructT
               [ (["substruct"], StructT
                    [ (["w","x","y","z"],UIntT 64)
                    ])
-              ]
-          , LayoutDecl "Bar" []
+              ])
+          , ("Bar", LayoutD $ LayoutDecl []
               [ LayoutSpec [] (WholeL "substruct")
               , LayoutSpec [] (FixedL 2 3)
               , LayoutSpec [] (SliceL "foo" 0 255)
-              ]
+              ])
           ]
       )
     , ( unlines
@@ -78,7 +78,7 @@ parseTests = testGroup "Parse Tests" $ hUnitTestToTests $ TestList $ map parseCo
           , "}"
           ]
       , Right $ File
-          [ TypeDecl "GDTEnt" [] $ StructT
+          [ ("GDTEnt", TypeD $ TypeDecl [] $ StructT
               [ (["base"], UIntT 32)
               , (["limit"], UIntT 20)
               , (["flags"], StructT
@@ -88,8 +88,8 @@ parseTests = testGroup "Parse Tests" $ hUnitTestToTests $ TestList $ map parseCo
                   [ (["ac", "rw", "dc", "ex", "pr"], NamedT "bool" [])
                   , (["privl"], UIntT 2)
                   ])
-              ]
-          , LayoutDecl "GDTEnt" [Endian Little]
+              ])
+          , ("GDTEnt", LayoutD $ LayoutDecl [Endian Little]
               [ LayoutSpec [] (SliceL "limit" 15 0)
               , LayoutSpec [] (SliceL "base"  23 0)
               , LayoutSpec [] $ StructL "access"
@@ -108,7 +108,7 @@ parseTests = testGroup "Parse Tests" $ hUnitTestToTests $ TestList $ map parseCo
                   , LayoutSpec [] (WholeL "gr")
                   ]
               , LayoutSpec [] (SliceL "base" 24 32)
-              ]
+              ])
           ]
         )
     ]

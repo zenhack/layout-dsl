@@ -15,53 +15,52 @@ import qualified Layout.Ast as Ast
 import qualified Data.Map.Strict as M
 
 data ValidationError
-    = DuplicateDecl Ast.Decl
+    = DuplicateDecl Text Ast.Decl
     | OrphanDecl Ast.Decl
     | NoSuchType Text
     | ArityMismatch Text
 
-type DeclMap = M.Map Text Ast.Decl
+data SymbolTable = SymbolTable
+    { types   :: M.Map Text Ast.TypeDecl
+    , layouts :: M.Map Text Ast.LayoutDecl
+    } deriving(Show, Eq)
 
 -- | Check for orphan declarations, i.e. type declarations without a
 -- corresponding layout, or vice versa.
-checkOrphans :: (MonadState (DeclMap, DeclMap) m, MonadWriter [ValidationError] m) => m ()
+checkOrphans :: (MonadState SymbolTable m, MonadWriter [ValidationError] m) => m ()
 checkOrphans = do
-    (types, layouts) <- get
+    SymbolTable types layouts <- get
     tell $ map OrphanDecl $
-        (M.elems $ types   `M.difference` layouts) ++
-        (M.elems $ layouts `M.difference` types)
+        (map Ast.TypeD   $ M.elems $ types   `M.difference` layouts) ++
+        (map Ast.LayoutD $ M.elems $ layouts `M.difference` types)
 
 
--- | Sort a list of declarations into the two maps held in the state.
--- type declarations go in the first map, while layout declarations go in the
--- second.
-sortDecls :: (MonadState (DeclMap, DeclMap) m, MonadWriter [ValidationError] m)
-    => [Ast.Decl] -> m ()
+-- | Sort a list of declarations into the symbol table.
+sortDecls :: (MonadState SymbolTable m, MonadWriter [ValidationError] m)
+    => [(Text, Ast.Decl)] -> m ()
 sortDecls [] = return ()
-sortDecls (decl:decls) = do
-    (types, layouts) <- get
+sortDecls ((name, decl):decls) = do
+    syms <- get
     case decl of
-        (Ast.TypeDecl name _ _) -> do
-            checkDups name types decl
-            put (M.insert name decl types, layouts)
-        (Ast.LayoutDecl name _ _) -> do
-            checkDups name layouts decl
-            put (types, M.insert name decl layouts)
+        (Ast.TypeD tyDecl) -> do
+            checkDups name (types syms) decl
+            put $ syms { types = M.insert name tyDecl (types syms) }
+        (Ast.LayoutD layoutDecl) -> do
+            checkDups name (layouts syms) decl
+            put $ syms { layouts = M.insert name layoutDecl (layouts syms) }
     sortDecls decls
   where
     checkDups name dict decl
-        | name `M.member` dict = tell [DuplicateDecl decl]
+        | name `M.member` dict = tell [DuplicateDecl name decl]
         | otherwise = return ()
 
 
 
 -- | @arities types@ is a map from names of type declarations to the lengths of
--- their parameter lists. All of the values in @types@ must be type
--- declarations, not layout declarations.
-arities :: DeclMap -> M.Map Text Int
+-- their parameter lists.
+arities :: M.Map Text Ast.TypeDecl -> M.Map Text Int
 arities types = M.map arity types where
-    arity (Ast.TypeDecl _ params _) = length params
-    arity _ = error "arity called on non-type declaration."
+    arity (Ast.TypeDecl params _) = length params
 
 -- | @checkArities arities typ@ Checks that all of the references to any type
 -- by name in @typ@ (a) correspond to an actually declared type, and (b) match

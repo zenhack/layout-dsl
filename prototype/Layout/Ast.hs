@@ -6,21 +6,22 @@ module Layout.Ast where
 
 import Data.Text(Text)
 
-data File = File [Decl] deriving(Show, Eq)
+data File = File [(Text, Decl)] deriving(Show, Eq)
 
 -- | A top-level declaration
 data Decl
-    -- logical layout declaration
-    = TypeDecl
-        Text -- ^ type name
+    = TypeD TypeDecl
+    | LayoutD LayoutDecl
+    deriving(Show, Eq)
+
+-- | logical layout declaration
+data TypeDecl = TypeDecl
         [Text] -- ^ type parameter names
         Type -- ^ definition
-    -- | Physical layout declaration
-    | LayoutDecl
-        Text -- ^ type name
-        [LayoutParam]
-        [LayoutSpec]
-    deriving(Show, Eq)
+        deriving(Show, Eq)
+
+-- | Physical layout declaration
+data LayoutDecl = LayoutDecl [LayoutParam] [LayoutSpec] deriving(Show, Eq)
 
 data Type
     = StructT
