@@ -17,7 +17,7 @@ import qualified Data.Map.Strict as M
 
 data ValidationError
     = DuplicateDecl Text Ast.Decl
-    | OrphanDecl Ast.Decl
+    | OrphanDecl Text Ast.Decl
     | NoSuchType Text
     | ArityMismatch Text
     deriving(Show, Eq)
@@ -70,9 +70,9 @@ collectDeclsM ((name, decl):decls) = do
 checkOrphansM :: (MonadState SymbolTable m, MonadWriter [ValidationError] m) => m ()
 checkOrphansM = do
     SymbolTable types layouts <- get
-    tell $ map OrphanDecl $
-        (map Ast.TypeD   $ M.elems $ types   `M.difference` layouts) ++
-        (map Ast.LayoutD $ M.elems $ layouts `M.difference` types)
+    tell $ map (uncurry OrphanDecl) $
+        (M.toList $ M.map Ast.TypeD   $ types   `M.difference` layouts) ++
+        (M.toList $ M.map Ast.LayoutD $ layouts `M.difference` types)
 
 -- | Return the arity (number of parameters) of a type declaration in the symbol
 -- table, or Nothing if it is not present.

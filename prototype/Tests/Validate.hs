@@ -24,7 +24,7 @@ validateTests = testGroup "Validate Tests" $ hUnitTestToTests $ TestList $ map v
           }
       )
     , ( File [("Foo", TypeD $ TypeDecl [] $ StructT [])]
-      , Left [OrphanDecl $ TypeD $ TypeDecl [] $ StructT []]
+      , Left [OrphanDecl "Foo" $ TypeD $ TypeDecl [] $ StructT []]
       )
     ]
  where validateCompare (ast@(File decls), syms) = TestCase $ assertEqual
