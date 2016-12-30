@@ -83,7 +83,7 @@ arity syms name = do
 
 checkAritiesM = do
     syms@(SymbolTable types _) <- get
-    mapM_ (\(Ast.TypeDecl _ ty) -> checkArities syms ty) types
+    mapM_ (\(Ast.TypeDecl _ ty) -> checkArities syms ty) (M.elems types)
 
 -- | @checkArities syms typ@ Checks that all of the references to any type
 -- by name in @typ@ (a) correspond to an actually declared type in the symbol
