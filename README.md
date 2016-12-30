@@ -6,7 +6,7 @@ NOTE: if you're viewing this on Github, you should be aware that the
 Github repository is a mirror; the canonical repository is on
 Gitlab.com, at:
 
-    https://gitlab.com/isd/layout-dsl
+<https://gitlab.com/isd/layout-dsl>
 
 Please report issues and submit pull requests there.
 
