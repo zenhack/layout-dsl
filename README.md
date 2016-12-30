@@ -1,8 +1,14 @@
-[![Build Status][ci-img]][ci]
-
 DSL for describing data layouts. Currently this is Apache-2.0 licensed,
 but future versions/implementations may be under different licenses
 (definitely FOSS); we'll play it by ear.
+
+NOTE: if you're viewing this on Github, you should be aware that the
+Github repository is a mirror; the canonical repository is on
+Gitlab.com, at:
+
+    https://gitlab.com/isd/layout-dsl
+
+Please report issues and submit pull requests there.
 
 # The Problem
 
@@ -377,5 +383,3 @@ individual opcodes between them.
 
 [1]: https://github.com/zenhack/zero
 [2]: https://doc.rust-lang.org/nomicon/data.html
-[ci-img]: https://travis-ci.org/zenhack/layout-dsl.svg?branch=master
-[ci]: https://travis-ci.org/zenhack/layout-dsl
