@@ -6,9 +6,8 @@ translation stages.
 -}
 module Layout.Validate where
 
-import Control.Monad.State (MonadState, get, put, StateT(..))
+import Control.Monad.State (MonadState, get, put, state, runState)
 import Control.Monad.Writer (MonadWriter, tell, WriterT(..))
-import Control.Monad.Identity (Identity(..))
 
 import Data.Text(Text)
 import qualified Layout.Ast as Ast
@@ -38,8 +37,8 @@ buildSyms decls = case errs of
         collectDeclsM decls
         checkOrphansM
         checkAritiesM
-    initM     = WriterT $ StateT $ \s -> Identity (((), []), s)
-    runM s m  = runIdentity $ runStateT (runWriterT $ initM >> m) s
+    initM     = WriterT $ state $ \s -> (((), []), s)
+    runM s m  = runState (runWriterT $ initM >> m) s
     emptySyms = SymbolTable { types   = M.empty
                             , layouts = M.empty
                             }
