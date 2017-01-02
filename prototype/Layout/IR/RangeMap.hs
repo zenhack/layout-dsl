@@ -23,9 +23,9 @@ index.
 -}
 module Layout.IR.RangeMap where
 
+import Control.Monad.Identity (Identity(Identity))
 import Data.Text (Text)
 
-data Id a = Id a deriving(Show, Eq)
 data Indexed a = Indexed Int a deriving(Show, Eq)
 
 data RangeMap = RangeMap
@@ -46,11 +46,11 @@ instance Eq (bucket RangeMap) => Eq (FieldMap bucket) where
 -- @chunkBytes@ transforms its argument to one where all @RangeMap@s fit neatly
 -- inside of one byte within the physical structure. See the module-level
 -- comment for further discussion.
-chunkBytes :: FieldMap Id -> FieldMap Indexed
+chunkBytes :: FieldMap Identity -> FieldMap Indexed
 chunkBytes (FieldMap fm) = FieldMap (map chunkField fm)
   where
     chunkField (name, ranges) = (name, concat $ map chunkRange ranges)
-    chunkRange (Id rm) =
+    chunkRange (Identity rm) =
         let
             startByte = rangeLayoutOff rm `div` 8
             startBit = rangeLayoutOff rm `mod` 8
@@ -61,9 +61,10 @@ chunkBytes (FieldMap fm) = FieldMap (map chunkField fm)
                                  , rangeLayoutOff = startBit
                                  })
                : chunkRange
-                     (Id RangeMap { rangeLen = rangeLen rm - lenFst
-                                  , rangeTypeOff = rangeTypeOff rm + lenFst
-                                  , rangeLayoutOff = rangeLayoutOff rm + lenFst
-                                  })
+                     (Identity RangeMap
+                        { rangeLen = rangeLen rm - lenFst
+                        , rangeTypeOff = rangeTypeOff rm + lenFst
+                        , rangeLayoutOff = rangeLayoutOff rm + lenFst
+                        })
         else
             [Indexed startByte (rm { rangeLayoutOff = startBit})]
