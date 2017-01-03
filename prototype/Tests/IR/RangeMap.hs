@@ -14,9 +14,6 @@ import Layout.IR.RangeMap
     , chunkBytes
     )
 
-instance Arbitrary a => Arbitrary (Identity a) where
-    arbitrary = Identity <$> arbitrary
-
 instance Arbitrary a => Arbitrary (Indexed a) where
     arbitrary = Indexed <$> arbitrary <*> arbitrary
 
