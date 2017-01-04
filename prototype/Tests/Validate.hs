@@ -10,18 +10,18 @@ import Test.Framework.Providers.HUnit (hUnitTestToTests)
 
 validateTests = testGroup "Validate Tests" $ hUnitTestToTests $ TestList $ map validateCompare
     [ ( File []
-      , Right $ SymbolTable M.empty M.empty
+      , Right $ SymbolTable M.empty
       )
     , ( File
         [ ("Foo", TypeD $ TypeDecl [] $ StructT [])
         , ("Foo", LayoutD $ LayoutDecl [] [])
         ]
-      , Right $ SymbolTable
-          { types = M.fromList
-              [("Foo", TypeDecl [] $ StructT [])]
-          , layouts = M.fromList
-              [("Foo", LayoutDecl [] [])]
-          }
+      , Right $ SymbolTable $M.fromList
+              [("Foo",
+                ( TypeDecl [] $ StructT []
+                , LayoutDecl [] []
+                ))
+              ]
       )
     , ( File [("Foo", TypeD $ TypeDecl [] $ StructT [])]
       , Left [OrphanDecl "Foo" $ TypeD $ TypeDecl [] $ StructT []]
