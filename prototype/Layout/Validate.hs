@@ -4,7 +4,12 @@
 Do some validation of the Ast, and collect some info useful for future
 translation stages.
 -}
-module Layout.Validate where
+module Layout.Validate
+    ( buildSyms
+    , SymbolTable(..)
+    , ValidationError(..)
+    )
+where
 
 import Control.Monad.State (MonadState, get, put, state, runState)
 import Control.Monad.Writer (MonadWriter, tell, WriterT(..))
