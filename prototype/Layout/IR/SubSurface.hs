@@ -1,3 +1,4 @@
+{-# LANGUAGE StandaloneDeriving, FlexibleContexts, UndecidableInstances #-}
 {-|
 
 First intermediate form after the Ast. This is semantically the same as a
@@ -10,12 +11,16 @@ fix that).
 -}
 module Layout.IR.SubSurface where
 
+import qualified Data.Map.Strict as M
 import Data.Text (Text)
 import Layout.Ast (ByteOrder(..), TypeParam(..))
 import qualified Layout.Ast as Ast
 
+data File align byteOrder slice
+    = File (M.Map Text (Type align byteOrder slice))
+
 data Type align byteOrder slice
-    = Type Text [Text] Ast.Type (LayoutSpec align byteOrder slice)
+    = Type [Text] Ast.Type (LayoutSpec align byteOrder slice)
 
 -- LayoutSpec and LayoutField are parametrized over a few things,
 -- each of kind (* -> *). These are containers for various information
@@ -33,3 +38,23 @@ data LayoutField align byteOrder slice
     = SliceL Text Int Int
     | FixedL (slice (Int, Int))
     | StructL Text [LayoutSpec align byteOrder slice]
+
+
+-- Derview Show and Eq for all of the above types, given
+deriving instance (Show (Type align byteOrder slice)) =>
+    Show (File align byteOrder slice)
+deriving instance (Show (LayoutSpec align byteOrder slice)) =>
+    Show (Type align byteOrder slice)
+deriving instance (Show (align Int), Show (byteOrder ByteOrder), Show (slice (Int, Int))) =>
+    Show (LayoutSpec align byteOrder slice)
+deriving instance (Show (align Int), Show (byteOrder ByteOrder), Show (slice (Int, Int))) =>
+    Show (LayoutField align byteOrder slice)
+
+deriving instance (Eq (Type align byteOrder slice)) =>
+    Eq (File align byteOrder slice)
+deriving instance (Eq (LayoutSpec align byteOrder slice)) =>
+    Eq (Type align byteOrder slice)
+deriving instance (Eq (align Int), Eq (byteOrder ByteOrder), Eq (slice (Int, Int))) =>
+    Eq (LayoutSpec align byteOrder slice)
+deriving instance (Eq (align Int), Eq (byteOrder ByteOrder), Eq (slice (Int, Int))) =>
+    Eq (LayoutField align byteOrder slice)
