@@ -1,4 +1,5 @@
-{-# LANGUAGE StandaloneDeriving, FlexibleContexts, UndecidableInstances #-}
+{-# LANGUAGE StandaloneDeriving, FlexibleContexts, UndecidableInstances,
+    KindSignatures, ConstraintKinds #-}
 {-|
 
 First intermediate form after the Ast. This is semantically the same as a
@@ -11,6 +12,7 @@ fix that).
 -}
 module Layout.IR.SubSurface where
 
+import GHC.Exts (Constraint)
 import qualified Data.Map.Strict as M
 import Data.Text (Text)
 import Layout.Ast (ByteOrder(..), TypeParam(..))
@@ -40,21 +42,16 @@ data LayoutField align byteOrder slice
     | StructL Text [LayoutSpec align byteOrder slice]
 
 
--- Derview Show and Eq for all of the above types, given
-deriving instance (Show (Type align byteOrder slice)) =>
-    Show (File align byteOrder slice)
-deriving instance (Show (LayoutSpec align byteOrder slice)) =>
-    Show (Type align byteOrder slice)
-deriving instance (Show (align Int), Show (byteOrder ByteOrder), Show (slice (Int, Int))) =>
-    Show (LayoutSpec align byteOrder slice)
-deriving instance (Show (align Int), Show (byteOrder ByteOrder), Show (slice (Int, Int))) =>
-    Show (LayoutField align byteOrder slice)
-
-deriving instance (Eq (Type align byteOrder slice)) =>
-    Eq (File align byteOrder slice)
-deriving instance (Eq (LayoutSpec align byteOrder slice)) =>
-    Eq (Type align byteOrder slice)
-deriving instance (Eq (align Int), Eq (byteOrder ByteOrder), Eq (slice (Int, Int))) =>
-    Eq (LayoutSpec align byteOrder slice)
-deriving instance (Eq (align Int), Eq (byteOrder ByteOrder), Eq (slice (Int, Int))) =>
-    Eq (LayoutField align byteOrder slice)
+deriving instance (Show (Type       align byteOrder slice)) => Show (File align byteOrder slice)
+deriving instance (Eq   (Type       align byteOrder slice)) => Eq   (File align byteOrder slice)
+deriving instance (Show (LayoutSpec align byteOrder slice)) => Show (Type align byteOrder slice)
+deriving instance (Eq   (LayoutSpec align byteOrder slice)) => Eq   (Type align byteOrder slice)
+deriving instance Ctx Show align byteOrder slice            => Show (LayoutSpec  align byteOrder slice)
+deriving instance Ctx Eq   align byteOrder slice            => Eq   (LayoutSpec  align byteOrder slice)
+deriving instance Ctx Show align byteOrder slice            => Show (LayoutField align byteOrder slice)
+deriving instance Ctx Eq   align byteOrder slice            => Eq   (LayoutField align byteOrder slice)
+type Ctx (cls :: * -> Constraint) align byteOrder slice =
+    ( cls (align Int)
+    , cls (byteOrder ByteOrder)
+    , cls (slice (Int, Int))
+    )
