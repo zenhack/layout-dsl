@@ -23,13 +23,13 @@ data Type align byteOrder slice
 -- translation. In earlier stages these things may be implicit or
 -- inherited, whereas in later stages they must be explicit for every
 -- field.
-data LayoutSpec byteOrder align slice = LayoutSpec
-    { layoutByteOrder :: byteOrder ByteOrder
-    , alignment :: align Int
-    , field :: LayoutField byteOrder align slice
+data LayoutSpec align byteOrder slice = LayoutSpec
+    { alignment :: align Int
+    , layoutByteOrder :: byteOrder ByteOrder
+    , field :: LayoutField align byteOrder slice
     }
 
-data LayoutField byteOrder align slice
+data LayoutField align byteOrder slice
     = SliceL Text Int Int
     | FixedL (slice (Int, Int))
-    | StructL Text [LayoutSpec byteOrder align slice]
+    | StructL Text [LayoutSpec align byteOrder slice]
