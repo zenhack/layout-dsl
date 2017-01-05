@@ -55,3 +55,30 @@ type Ctx (cls :: * -> Constraint) align byteOrder slice =
     , cls (byteOrder ByteOrder)
     , cls (slice (Int, Int))
     )
+
+
+{-
+
+-- WIP; commented out to keep from breaking CI.
+
+fileFromAst :: SymbolTable -> File Maybe Maybe Maybe
+fileFromAst syms = M.map
+    (\(TypeDecl params def, lD) -> Type params def (layoutSpecFromAstDecl lD))
+    syms
+
+layoutSpecFromAstDecl :: SymbolTable -> Ast.LayoutDecl -> LayoutSpec Maybe Maybe Maybe
+layoutSpecFromAstDecl (Ast.LayoutDecl params specs) =
+    let (align, byteOrder) = parseLayoutParams params
+    in LayoutSpec
+        { alignment = align
+        , layoutByteOrder = byteOrder
+
+parseLayoutParams :: [Ast.LayoutParam] -> (Maybe Int, Maybe ByteOrder)
+parseLayoutParams = parseLayoutParmas' (Nothing, Nothing) where
+    -- TODO signal an error on duplicates
+    parseLayoutParams' (align, byteOrder) (Ast.Align n:params) =
+        parseLayoutParams' (Just n, byteOrder) params
+    parseLayoutParams' (align, byteOrder) (Ast.Endian byteOrder' =
+        parseLayoutParams (align, Just byteOrder')
+    parseLayoutParams' ret [] = ret
+-}
