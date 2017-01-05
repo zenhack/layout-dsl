@@ -11,17 +11,11 @@ fix that).
 module Layout.IR.SubSurface where
 
 import Data.Text (Text)
-import Layout.Ast (ByteOrder(..))
+import Layout.Ast (ByteOrder(..), TypeParam(..))
+import qualified Layout.Ast as Ast
 
 data Type align byteOrder slice
-    = Type Text [Text] View (LayoutSpec align byteOrder slice)
-
-data View
-    = Struct [(Text, View)]
-    | Named Text [TypeParam]
-    | UInt Int
-
-data TypeParam = TyVar Text | TyInt Int deriving(Show, Eq)
+    = Type Text [Text] Ast.Type (LayoutSpec align byteOrder slice)
 
 -- LayoutSpec and LayoutField are parametrized over a few things,
 -- each of kind (* -> *). These are containers for various information
