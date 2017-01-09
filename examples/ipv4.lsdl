@@ -1,0 +1,44 @@
+/*
+	An ipv4 header, per RFC 791. Currently doesn't deal with options &
+	padding; we need to think about how to deal with variable-length
+	constructs like those.
+*/
+type IPv4Header struct {
+	version: uint<4>
+	ihl: uint<4>
+	tos: struct {
+		precedence: uint<2>
+		lowDelay, highThroughput, highReliability: bool
+	}
+	totalLength: uint<16>
+	identification: uint<16>
+	dontFragment, moreFragments: bool
+	fragmentOffset: uint<13>
+	ttl: uint<8>
+	protocol: uint<8>
+	hdrChecksum: uint<16>
+	srcAddr, dstAddr: uint<32>
+}
+
+layout IPv4Header (big) {
+	version
+	ihl
+	tos {
+		precedence
+		lowDelay
+		highThroughput
+		highReliabaility
+		2'0x0
+	}
+	totalLength
+	identification
+	1'0x0
+	dontFragment
+	moreFragments
+	fragmentOffset
+	ttl
+	protocol
+	hdrChecksum
+	srcAddr
+	dstAddr
+}
