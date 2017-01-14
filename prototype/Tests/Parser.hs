@@ -37,9 +37,9 @@ parseTests = testGroup "Parse Tests" $ hUnitTestToTests $ TestList $ map parseCo
                    ])
               ])
           , ("Bar", LayoutD $ LayoutDecl []
-              [ LayoutSpec [] (WholeL "substruct")
-              , LayoutSpec [] (FixedL 2 3)
-              , LayoutSpec [] (SliceL "foo" 0 255)
+              [ LayoutSpec [] (NamedLF "substruct" WholeL)
+              , LayoutSpec [] (ConstLF $ FixedL 2 3)
+              , LayoutSpec [] (NamedLF "foo" $ SliceL 0 255)
               ])
           ]
       )
@@ -90,24 +90,24 @@ parseTests = testGroup "Parse Tests" $ hUnitTestToTests $ TestList $ map parseCo
                   ])
               ])
           , ("GDTEnt", LayoutD $ LayoutDecl [Endian Little]
-              [ LayoutSpec [] (SliceL "limit" 15 0)
-              , LayoutSpec [] (SliceL "base"  23 0)
-              , LayoutSpec [] $ StructL "access"
-                  [ LayoutSpec [] (WholeL "ac")
-                  , LayoutSpec [] (WholeL "rw")
-                  , LayoutSpec [] (WholeL "dc")
-                  , LayoutSpec [] (WholeL "ex")
-                  , LayoutSpec [] (FixedL 1 1)
-                  , LayoutSpec [] (WholeL "privl")
-                  , LayoutSpec [] (WholeL "pr")
+              [ LayoutSpec [] (NamedLF "limit" $ SliceL 15 0)
+              , LayoutSpec [] (NamedLF "base" $ SliceL 23 0)
+              , LayoutSpec [] $ NamedLF "access" $ StructL
+                  [ LayoutSpec [] $ NamedLF "ac" WholeL
+                  , LayoutSpec [] $ NamedLF "rw" WholeL
+                  , LayoutSpec [] $ NamedLF "dc" WholeL
+                  , LayoutSpec [] $ NamedLF "ex" WholeL
+                  , LayoutSpec [] $ ConstLF $ FixedL 1 1
+                  , LayoutSpec [] $ NamedLF "privl" WholeL
+                  , LayoutSpec [] $ NamedLF "pr" WholeL
                   ]
-              , LayoutSpec [] (SliceL "limit" 19 16)
-              , LayoutSpec [] $ StructL "flags"
-                  [ LayoutSpec [] (FixedL 2 0)
-                  , LayoutSpec [] (WholeL "sz")
-                  , LayoutSpec [] (WholeL "gr")
+              , LayoutSpec [] $ NamedLF "limit" $ SliceL 19 16
+              , LayoutSpec [] $ NamedLF "flags" $ StructL
+                  [ LayoutSpec [] $ ConstLF $ FixedL 2 0
+                  , LayoutSpec [] $ NamedLF "sz" WholeL
+                  , LayoutSpec [] $ NamedLF "gr" WholeL
                   ]
-              , LayoutSpec [] (SliceL "base" 24 32)
+              , LayoutSpec [] $ NamedLF "base" $ SliceL 24 32
               ])
           ]
         )

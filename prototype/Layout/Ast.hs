@@ -46,16 +46,21 @@ data ByteOrder = Little | Big deriving(Show, Eq)
 data LayoutSpec = LayoutSpec [LayoutParam] LayoutField deriving(Show, Eq)
 
 data LayoutField
+    = NamedLF Text NamedLF
+    | ConstLF ConstLF
+    deriving(Show, Eq)
+
+data NamedLF
     = SliceL
-        Text -- ^ name
         Int -- ^ first index
         Int -- ^ second index
-    | FixedL
-        Int -- ^ length
-        Int -- ^ value
     | StructL
-        Text -- ^ name
         [LayoutSpec] -- ^ fields
     | WholeL
-        Text -- ^ field name
+    deriving(Show, Eq)
+
+data ConstLF
+    = FixedL
+        Int -- ^ length
+        Int -- ^ value
     deriving(Show, Eq)

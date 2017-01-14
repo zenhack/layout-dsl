@@ -112,7 +112,7 @@ pConstField = token $ do
     width <- lIntLit
     char '\''
     value <- lIntLit
-    return $ FixedL width value
+    return $ ConstLF $ FixedL width value
 
 
 pType :: Parser Type
@@ -132,16 +132,20 @@ pUIntType = UIntT <$> (keyword "uint" >> keyword "<" >> pIntLit <* keyword ">")
 
 pIdentList = commaList pIdent
 
+pLayout :: Parser LayoutSpec
 pLayout = LayoutSpec <$> option [] pAnnotationList
                      <*> pLayoutField
-pLayoutField = pConstField <|> pNamedField
-pNamedField = do
-    name <- pIdent
-    choice [ do (l, r) <- pLayoutSlice
-                return $ SliceL name l r
-           , StructL name <$> (keyword "{" *> many pLayout <* keyword "}")
-           , return $ WholeL name
-           ]
+
+pLayoutField :: Parser LayoutField
+pLayoutField =
+    pConstField <|> pNamedField
+
+pNamedField :: Parser LayoutField
+pNamedField = NamedLF <$> pIdent <*> choice
+    [ (uncurry SliceL) <$> pLayoutSlice
+    , StructL <$> (keyword "{" *> many pLayout <* keyword "}")
+    , return $ WholeL
+    ]
 pLayoutSlice = do
     keyword "["
     l <- pIntLit
