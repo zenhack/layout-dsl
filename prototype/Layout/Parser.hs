@@ -21,6 +21,12 @@ import Data.Text (Text)
 import Layout.Ast
 
 
+-- The Ast is parametrized over a few type (operators) so that the types can be
+-- strengthened as the translation goes on. ParseStage is a helper for
+-- specifiying the monomorphized types that we actually parse:
+type ParseStage t = t [LayoutParam] Maybe
+
+
 lLetter, lBinaryDigit, lDecimalDigit, lOctalDigit, lHexDigit :: Parser Char
 
 lLetter = oneOf $ ['A'..'Z'] ++ ['a'..'z'] ++ ['_']
@@ -107,7 +113,7 @@ readBin ds = sum $ zipWith shiftL (reverse digits) [0,1..]
 
 pIntLit = token lIntLit
 
-pConstField :: Parser LayoutField
+pConstField :: Parser (ParseStage LayoutField)
 pConstField = token $ do
     width <- lIntLit
     char '\''
@@ -132,19 +138,18 @@ pUIntType = UIntT <$> (keyword "uint" >> keyword "<" >> pIntLit <* keyword ">")
 
 pIdentList = commaList pIdent
 
-pLayout :: Parser LayoutSpec
+pLayout :: Parser (ParseStage LayoutSpec)
 pLayout = LayoutSpec <$> option [] pAnnotationList
                      <*> pLayoutField
 
-pLayoutField :: Parser LayoutField
+pLayoutField :: Parser (ParseStage LayoutField)
 pLayoutField =
     pConstField <|> pNamedField
 
-pNamedField :: Parser LayoutField
+pNamedField :: Parser (ParseStage LayoutField)
 pNamedField = NamedLF <$> pIdent <*> choice
-    [ (uncurry SliceL) <$> pLayoutSlice
-    , StructL <$> (keyword "{" *> many pLayout <* keyword "}")
-    , return $ WholeL
+    [ StructL <$> (keyword "{" *> many pLayout <* keyword "}")
+    , SliceL <$> optionMaybe pLayoutSlice
     ]
 pLayoutSlice = do
     keyword "["
@@ -165,13 +170,14 @@ pAnnotationList :: Parser [LayoutParam]
 pAnnotationList = keyword "(" *> commaList pAnnotation <* keyword ")"
 
 -- | Parse a whole source file
+pFile :: Parser (ParseStage File)
 pFile = many whitespaceOrComment *> (File <$> many pDecl) <* eof
 
 
-pDecl :: Parser (Text, Decl)
+pDecl :: Parser (Text, ParseStage Decl)
 pDecl = pTypeDecl <|> pLayoutDecl
 
-pTypeDecl :: Parser (Text, Decl)
+pTypeDecl :: Parser (Text, ParseStage Decl)
 pTypeDecl = do
     keyword "type"
     name <- pIdent
@@ -179,7 +185,7 @@ pTypeDecl = do
     ty <- pType
     return (name, TypeD $ TypeDecl params ty)
 
-pLayoutDecl :: Parser (Text, Decl)
+pLayoutDecl :: Parser (Text, ParseStage Decl)
 pLayoutDecl = do
     keyword "layout"
     name <- pIdent

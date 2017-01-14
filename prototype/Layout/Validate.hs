@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, StandaloneDeriving, UndecidableInstances #-}
 {-|
 
 Do some validation of the Ast, and collect some info useful for future
@@ -17,33 +17,37 @@ import Control.Monad.Writer (MonadWriter, tell, WriterT(..))
 import Data.Maybe (fromJust)
 import Data.Text (Text)
 import qualified Layout.Ast as Ast
-
+import Layout.Parser (ParseStage)
 import qualified Data.Map.Strict as M
 
 data ValidationError
-    = DuplicateDecl Text Ast.Decl
-    | OrphanDecl Text Ast.Decl
+    = DuplicateDecl Text (ParseStage Ast.Decl)
+    | OrphanDecl Text (ParseStage Ast.Decl)
     | NoSuchType Text
     | ArityMismatch Text
+    | ConflictingLayoutParams [Ast.LayoutParam]
     deriving(Show, Eq)
 
 -- | A symbol table, mapping names to type, layout pairs.
-newtype SymbolTable = SymbolTable (M.Map Text (Ast.TypeDecl, Ast.LayoutDecl))
-                    deriving(Show, Eq)
+newtype SymbolTable lParams slice
+    = SymbolTable (M.Map Text (Ast.TypeDecl, Ast.LayoutDecl lParams slice))
+
+deriving instance Ast.ParamCtx Show lParams slice => Show (SymbolTable lParams slice)
+deriving instance Ast.ParamCtx Eq   lParams slice => Eq   (SymbolTable lParams slice)
 
 -- | An "in progress" SymbolTable. In this case, we don't require at the type
 -- level that there's a 1-1 type-to-layout mapping, since we use it while
 -- building up the result.
 data WorkingSymbolTable = WorkingSymbolTable
     { types   :: M.Map Text Ast.TypeDecl
-    , layouts :: M.Map Text Ast.LayoutDecl
+    , layouts :: M.Map Text (ParseStage Ast.LayoutDecl)
     } deriving(Show, Eq)
 
 -- | Convert a validated working symbol table to a finalized one. The working
 -- symbol table *must* have the same set of keys in each of its maps. The
 -- finalized symbol table enforces the 1-1 correspondence between layouts and
 -- types at the type level.
-finalizeSymbolTable :: WorkingSymbolTable -> SymbolTable
+finalizeSymbolTable :: WorkingSymbolTable -> ParseStage SymbolTable
 finalizeSymbolTable syms = SymbolTable $ M.fromList $ map
     (\(k, t) -> (k, ( t
                     , fromJust (M.lookup k (layouts syms))
@@ -52,7 +56,7 @@ finalizeSymbolTable syms = SymbolTable $ M.fromList $ map
 
 -- | Compile a of declarations into the symbol table, validating it
 -- along the way. Return a Left if any errors occur.
-buildSyms :: [(Text, Ast.Decl)] -> Either [ValidationError] SymbolTable
+buildSyms :: [(Text, ParseStage Ast.Decl)] -> Either [ValidationError] (ParseStage SymbolTable)
 buildSyms decls = case errs of
     [] -> Right (finalizeSymbolTable syms)
     _ -> Left errs
@@ -70,7 +74,7 @@ buildSyms decls = case errs of
 -- | Collect declarations into the SymbolTable state. Errors are built up
 -- using a MonadWriter.
 collectDeclsM :: (MonadState WorkingSymbolTable m, MonadWriter [ValidationError] m)
-    => [(Text, Ast.Decl)] -> m ()
+    => [(Text, ParseStage Ast.Decl)] -> m ()
 collectDeclsM [] = return ()
 collectDeclsM ((name, decl):decls) = do
     syms <- get
