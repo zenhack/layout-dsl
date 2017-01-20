@@ -1,4 +1,5 @@
-{-# LANGUAGE FlexibleContexts, StandaloneDeriving, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts, StandaloneDeriving, UndecidableInstances,
+    ConstraintKinds #-}
 {-|
 
 Do some validation of the Ast, and collect some info useful for future
