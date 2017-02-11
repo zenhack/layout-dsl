@@ -15,9 +15,9 @@ the struct.
 
 The structures of these two intermediate forms are very similar, so 'FieldMap'
 handles both of these. 'FieldMap' has kind '(* -> *) -> *', where the parameter
-is (for our purposes) either Id or Indexed. In the first stage it is 'Id', which
-adds no extra information. In the second, it is 'Indexed', which adds the byte
-index.
+is (for our purposes) either Idenity or Indexed. In the first stage it is
+'Identity', which adds no extra information. In the second, it is 'Indexed',
+which adds the byte index.
 
 'chunkBytes' converts from the first stage to the second.
 -}
