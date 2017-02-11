@@ -2,7 +2,7 @@ module Main where
 
 import Test.Framework (defaultMain)
 import Tests.Parser (parseTests)
-import Tests.Validate (validateTests)
+import Tests.Validate (buildSymsTests, parseLayoutParamsTests)
 import Tests.IR.RangeMap (rangeMapTests)
 
 -- Just so we're building these at all; will probably remove once we have
@@ -16,5 +16,6 @@ main :: IO ()
 main = defaultMain
     [ parseTests
     , rangeMapTests
-    , validateTests
+    , buildSymsTests
+    , parseLayoutParamsTests
     ]

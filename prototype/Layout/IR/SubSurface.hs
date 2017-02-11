@@ -64,17 +64,5 @@ layoutSpecFromAstDecl (Ast.LayoutDecl params specs) =
         , layoutByteOrder = byteOrder
         , field = StructL $ map .. specs
         }
-
-parseLayoutParams :: [Ast.LayoutParam] -> Either [ValidationError] (Maybe Int, Maybe ByteOrder)
-parseLayoutParams = parseLayoutParmas' (Nothing, Nothing) where
-    parseLayoutParams' (Just align, _) (Ast.Align align':_) =
-        Left [ConflictingLayoutParams [Ast.Align align, Ast.Align align']
-    parseLayoutParams' (_, Just byteOrder) (Ast.Endian byteOrder':_) =
-        Left [ConflictingLayoutParams [Ast.Endian byteOrder, Ast.Endian byteOrder']
-    parseLayoutParams' (align, byteOrder) (Ast.Align n:params) =
-        parseLayoutParams' (Just n, byteOrder) params
-    parseLayoutParams' (align, byteOrder) (Ast.Endian byteOrder') =
-        parseLayoutParams (align, Just byteOrder')
-    parseLayoutParams' ret [] = ret
 -}
 -}

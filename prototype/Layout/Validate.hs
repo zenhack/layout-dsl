@@ -9,6 +9,7 @@ module Layout.Validate
     ( buildSyms
     , SymbolTable(..)
     , ValidationError(..)
+    , parseLayoutParams
     )
 where
 
@@ -123,3 +124,47 @@ checkArities syms (Ast.NamedT name params)
 checkArities syms (Ast.StructT fields) =
     mapM_ (checkArities syms . snd) fields
 checkArities _ _ = return ()
+
+-- | parseLayoutParams parses its argument into a pair (align, byteorder)
+-- representing the alignment and byte order specified by the params.
+-- If either of these is unspecified, the corresponding component will be
+-- 'Nothing'.
+--
+-- parseLayoutParams validates its argument, with invalid arguments resulting
+-- in a Left.
+parseLayoutParams :: [Ast.LayoutParam]
+    -> Either [ValidationError] ( Maybe Int -- ^ alignment
+                                , Maybe Ast.ByteOrder
+                                )
+parseLayoutParams = parseLayoutParams' [] (Nothing, Nothing)
+parseLayoutParams' [] results [] =
+    -- end of input without errors:
+    Right results
+parseLayoutParams' errs _ [] =
+    -- end of input with errors:
+    Left errs
+parseLayoutParams' errs (Nothing, byteorder) (Ast.Align n:params) =
+    -- Alignment when we don't already have one:
+    parseLayoutParams' errs (Just n, byteorder) params
+parseLayoutParams' errs (align, Nothing) (Ast.Endian byteorder:params) =
+    -- Byte order when we don't already have one:
+    parseLayoutParams' errs (align, Just byteorder) params
+parseLayoutParams' errs results@(Just n, byteorder) (Ast.Align m:params) =
+    -- Alignment when we already have one; this is an error, but
+    -- keep going so we can get more info re: errors:
+    parseLayoutParams'
+        (ConflictingLayoutParams [Ast.Align n, Ast.Align m]:errs)
+        results
+        params
+parseLayoutParams'
+    errs
+    results@(align, Just byteorder)
+    (Ast.Endian byteorder':params) =
+    -- Byte order when we already have one; this is an error, but
+    -- keep going so we can get more info re: errors:
+    parseLayoutParams'
+        (ConflictingLayoutParams [ Ast.Endian byteorder
+                                 , Ast.Endian byteorder'
+                                 ]:errs)
+        results
+        params
