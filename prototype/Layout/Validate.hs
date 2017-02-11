@@ -10,6 +10,7 @@ module Layout.Validate
     , SymbolTable(..)
     , ValidationError(..)
     , parseLayoutParams
+    , checkLayoutParams
     )
 where
 
@@ -168,3 +169,35 @@ parseLayoutParams'
                                  ]:errs)
         results
         params
+
+type LPChecker (t :: * -> (* -> *) -> *) (slice :: * -> *) =
+    t [Ast.LayoutParam] slice
+    -> Either [ValidationError] (t (Maybe Int, Maybe Ast.ByteOrder) slice)
+
+checkFileLPs        :: LPChecker Ast.File        slice
+checkDeclLPs        :: LPChecker Ast.Decl        slice
+checkLayoutDeclLPs  :: LPChecker Ast.LayoutDecl  slice
+checkLayoutSpecLPs  :: LPChecker Ast.LayoutSpec  slice
+checkLayoutFieldLPs :: LPChecker Ast.LayoutField slice
+checkNamedLFLPs     :: LPChecker Ast.NamedLF     slice
+
+checkLayoutParams = checkFileLPs
+
+checkFileLPs (Ast.File decls) = do
+    Ast.File <$> mapM (\(name, decl) -> do
+                            decl' <- checkDeclLPs decl
+                            return (name, decl'))
+                 decls
+checkDeclLPs (Ast.TypeD decl) = Right (Ast.TypeD decl)
+checkDeclLPs (Ast.LayoutD decl) = Ast.LayoutD <$> checkLayoutDeclLPs decl
+checkLayoutDeclLPs (Ast.LayoutDecl lParams specs) =
+    Ast.LayoutDecl <$> parseLayoutParams lParams
+                   <*> mapM checkLayoutSpecLPs specs
+checkLayoutSpecLPs (Ast.LayoutSpec lParams field) =
+    Ast.LayoutSpec <$> parseLayoutParams lParams
+                   <*> checkLayoutFieldLPs field
+checkLayoutFieldLPs (Ast.ConstLF field) = Right (Ast.ConstLF field)
+checkLayoutFieldLPs (Ast.NamedLF name field) =
+    Ast.NamedLF name <$> checkNamedLFLPs field
+checkNamedLFLPs (Ast.SliceL field) = Right (Ast.SliceL field)
+checkNamedLFLPs (Ast.StructL specs) = Ast.StructL <$> mapM checkLayoutSpecLPs specs

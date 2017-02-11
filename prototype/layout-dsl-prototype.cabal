@@ -45,7 +45,8 @@ test-suite the-test-suite
   type: exitcode-stdio-1.0
   main-is: TestMain.hs
   default-extensions:
-    OverloadedStrings
+    OverloadedStrings,
+    KindSignatures
   build-depends:
     base >=4.7 && <4.10,
     bytestring   >= 0.10.8 && < 0.11,

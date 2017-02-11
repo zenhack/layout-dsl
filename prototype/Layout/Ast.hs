@@ -1,5 +1,5 @@
 {-# LANGUAGE StandaloneDeriving, FlexibleContexts, UndecidableInstances,
-    KindSignatures, ConstraintKinds #-}
+    ConstraintKinds #-}
 {-|
 
 Abstract synatx tree for the DSL.
