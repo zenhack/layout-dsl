@@ -14,6 +14,7 @@ module Layout.Validate
     )
 where
 
+import Control.Monad (forM_)
 import Control.Monad.State (MonadState, get, put, state, runState)
 import Control.Monad.Writer (MonadWriter, tell, WriterT(..))
 
@@ -29,6 +30,7 @@ data ValidationError
     | NoSuchType Text
     | ArityMismatch Text
     | ConflictingLayoutParams [Ast.LayoutParam]
+    | TypeParamsNotImplemented Text
     deriving(Show, Eq)
 
 -- | A symbol table, mapping names to type, layout pairs.
@@ -68,11 +70,23 @@ buildSyms decls = case errs of
         collectDeclsM decls
         checkOrphansM
         checkAritiesM
+        checkNoTypeParams
     initM     = WriterT $ state $ \s -> (((), []), s)
     runM s m  = runState (runWriterT $ initM >> m) s
     emptySyms = WorkingSymbolTable { types   = M.empty
                                    , layouts = M.empty
                                    }
+
+
+-- | Verify that the Ast contains no type parameters; we don't yet
+-- implement these.
+checkNoTypeParams :: (MonadState WorkingSymbolTable m, MonadWriter [ValidationError] m)
+    => m ()
+checkNoTypeParams = do
+    syms <- M.toList . types <$> get
+    forM_ syms $ \(k, v) -> case v of
+        Ast.TypeDecl [] _ -> return ()
+        _ -> tell [TypeParamsNotImplemented k]
 
 -- | Collect declarations into the SymbolTable state. Errors are built up
 -- using a MonadWriter.
