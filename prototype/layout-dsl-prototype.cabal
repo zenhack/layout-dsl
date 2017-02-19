@@ -20,6 +20,7 @@ executable layout-dsl-prototype
   main-is:             Main.hs
   default-extensions:
     OverloadedStrings,
+    KindSignatures,
     DoAndIfThenElse
   other-modules:
     Layout.Ast,
