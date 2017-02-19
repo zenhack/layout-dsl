@@ -11,6 +11,7 @@ module Layout.Validate
     , ValidationError(..)
     , parseLayoutParams
     , checkLayoutParams
+    , explicitSlices
     )
 where
 
@@ -18,6 +19,7 @@ import Control.Monad (forM_)
 import Control.Monad.State (MonadState, get, put, state, runState)
 import Control.Monad.Writer (MonadWriter, tell, WriterT(..))
 
+import Data.Functor.Identity (Identity(..))
 import Data.Maybe (fromJust)
 import Data.Text (Text)
 import qualified Layout.Ast as Ast
@@ -215,3 +217,48 @@ checkLayoutFieldLPs (Ast.NamedLF name field) =
     Ast.NamedLF name <$> checkNamedLFLPs field
 checkNamedLFLPs (Ast.SliceL field) = Right (Ast.SliceL field)
 checkNamedLFLPs (Ast.StructL specs) = Ast.StructL <$> mapM checkLayoutSpecLPs specs
+
+
+type ESConverter (t :: * -> (* -> *) -> *) p =
+    ParseStage SymbolTable -> t p Maybe -> t p Identity
+
+fileES :: ESConverter Ast.File p
+declES :: ESConverter Ast.Decl p
+layoutDeclES :: ESConverter Ast.LayoutDecl p
+layoutSpecES :: ESConverter Ast.LayoutSpec p
+layoutFieldES :: ESConverter Ast.LayoutField p
+
+explicitSlices = fileES
+
+fileES syms (Ast.File decls) =
+    Ast.File (map (\(name, decl) ->
+                let decl' = declES syms decl
+                in (name, decl'))
+             decls)
+declES _ (Ast.TypeD decl) = Ast.TypeD decl
+declES syms (Ast.LayoutD decl) = Ast.LayoutD (layoutDeclES syms decl)
+layoutDeclES syms (Ast.LayoutDecl lParams specs) =
+    Ast.LayoutDecl lParams
+                   (map (layoutSpecES syms) specs)
+layoutSpecES syms (Ast.LayoutSpec lParams field) =
+    Ast.LayoutSpec lParams (layoutFieldES syms field)
+layoutFieldES _ (Ast.ConstLF field) = Ast.ConstLF field
+layoutFieldES _ (Ast.NamedLF name (Ast.SliceL (Just range))) =
+    Ast.NamedLF name $ Ast.SliceL $ Identity range
+layoutFieldES syms (Ast.NamedLF name (Ast.SliceL Nothing)) =
+    Ast.NamedLF name $ Ast.SliceL $
+        Identity (0, getTypeSize syms (Ast.NamedT name []) - 1)
+layoutFieldES syms (Ast.NamedLF name (Ast.StructL specs)) =
+    Ast.NamedLF name (Ast.StructL (map (layoutSpecES syms) specs))
+
+
+-- | @getTypeSize syms typ@ is the size in bits of of the type @typ@ given
+-- the symbol table @syms@. If @typ@ is type name, it *must* be in @syms@.
+getTypeSize :: ParseStage SymbolTable -> Ast.Type -> Int
+getTypeSize syms (Ast.StructT fields) = sum (map (fieldListSize syms) fields)
+  where
+    fieldListSize syms (list, typ) = getTypeSize syms typ * length list
+getTypeSize _ (Ast.UIntT sz) = sz
+getTypeSize syms@(SymbolTable m) (Ast.NamedT name []) =
+    let (Ast.TypeDecl [] typ) = fst $ fromJust $ M.lookup name m
+    in getTypeSize syms typ
