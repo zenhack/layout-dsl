@@ -1,4 +1,4 @@
-module Tests.Validate where
+module Tests.Validate (validateTests) where
 
 import Layout.Ast
 import Layout.Validate
@@ -7,6 +7,10 @@ import Test.HUnit (assertEqual, Test(TestCase, TestList))
 import Test.Framework (testGroup)
 import Test.Framework.Providers.HUnit (hUnitTestToTests)
 
+validateTests = testGroup "Validate Tests"
+    [ buildSymsTests
+    , parseLayoutParamsTests
+    ]
 
 buildSymsTests = testGroup "buildSyms Tests" $ hUnitTestToTests $ TestList $
     map buildSymsCompare

@@ -1,4 +1,4 @@
-module Tests.Parser where
+module Tests.Parser (parserTests) where
 
 import Test.HUnit (assertEqual, Test(TestCase, TestList))
 import Test.Framework (testGroup)
@@ -11,7 +11,7 @@ import Text.ParserCombinators.Parsec (runParser)
 sliceL l r = SliceL (Just (l, r))
 wholeL = SliceL Nothing
 
-parseTests = testGroup "Parse Tests" $ hUnitTestToTests $ TestList $ map parseCompare
+parserTests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList $ map parseCompare
     [ ( unlines
           [ "type Foo struct {"
           , "    f, g: uint<2>"

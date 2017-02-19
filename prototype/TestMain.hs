@@ -1,8 +1,8 @@
 module Main where
 
 import Test.Framework (defaultMain)
-import Tests.Parser (parseTests)
-import Tests.Validate (buildSymsTests, parseLayoutParamsTests)
+import Tests.Parser (parserTests)
+import Tests.Validate (validateTests)
 import Tests.IR.RangeMap (rangeMapTests)
 
 -- Just so we're building these at all; will probably remove once we have
@@ -13,8 +13,7 @@ import qualified Layout.Target.Haskell
 
 main :: IO ()
 main = defaultMain
-    [ parseTests
+    [ parserTests
     , rangeMapTests
-    , buildSymsTests
-    , parseLayoutParamsTests
+    , validateTests
     ]
