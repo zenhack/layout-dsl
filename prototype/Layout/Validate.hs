@@ -15,6 +15,7 @@ module Layout.Validate
     )
 where
 
+import Control.Applicative ((<$>), (<*>))
 import Control.Monad (forM_)
 import Control.Monad.State (MonadState, get, put, state, runState)
 import Control.Monad.Writer (MonadWriter, tell, WriterT(..))
