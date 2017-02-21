@@ -92,7 +92,7 @@ The underscore character _ (U+005F) is considered a letter.
 
 ```
 letter        = "A" … "Z" | "a" … "z" | "_" .
-binary_digit  = "0" | "1"
+binary_digit  = "0" | "1" .
 decimal_digit = "0" … "9" .
 octal_digit   = "0" … "7" .
 hex_digit     = "0" … "9" | "A" … "F" | "a" … "f" .
@@ -141,11 +141,12 @@ The following keywords are reserved and may not be used as identifiers.
 # Integer literals
 
 An integer literal is a sequence of digits representing an integer
-constant. An optional prefix may be used to set a decimal base: 0o or | 0O for
-octal, 0d or 0D for decimal, 0x or 0X for hexadecimal, 0b or 0B for binary.  If
-no prefix is supplied, any literal starting with a "0" is interpreted as octal,
-and any literal starting with a digit 1-9 is interpreted as decimal. In
-hexadecimal literals, letters a-f and A-F represent values 10 through 15.
+constant. An optional prefix may be used to set a base: 0o or 0O for
+octal, 0d or 0D for decimal, 0x or 0X for hexadecimal, 0b or 0B for
+binary.  If no prefix is supplied, any literal starting with a "0" is
+interpreted as octal, and any literal starting with a digit 1-9 is
+interpreted as decimal. In hexadecimal literals, letters a-f and A-F
+represent (decimal) values 10 through 15.
 
 ```
 int_lit             = decimal_lit | octal_lit | hex_lit | binary_lit | "0" .

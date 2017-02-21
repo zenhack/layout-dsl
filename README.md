@@ -78,8 +78,12 @@ generate constant values to embed in executables, or potentially other
 applications.
 
 This is still very WIP. Below we describe an overview of current
-thinking. The file `grammar.md` has the beginnings of a more formal
-definition, but it is incomplete.
+thinking. The `prototype` directory has the beginnings of an
+implementation of a tool that generates getters and setters as suggested
+below.  The file `grammar.md` contains a (partial) formal grammar,
+but it may not be entirely up to date with what the prototype
+implementation does. The spec will become more accurate once the
+language itself is more stabilized. `examples/` contains some examples.
 
 ## Overview
 
@@ -118,14 +122,15 @@ Example:
     layout GDTEnt (little) {
         // Denotes the bottom 16 bits of the limit field. Can be specified as
         // either [hi:lo] or [lo:hi]. We allow both to make transcribing
-        // from hardware manuals easier.
+        // from hardware manuals easier. The range is *inclusive*, with
+        // the lowest bit having index 0.
         limit[15:0]
 
         base[23:0]
 
         access {
             // Without the slice notation, we embed the whole field.
-            // Booleans are assumed 1 bit.
+            // Booleans are assumed 1 bit, true = 1, false = 0.
             ac rw dc ex
 
             // A bit that is always 1. Syntax is Verilog inspired, of
@@ -143,7 +148,7 @@ Example:
             sz
             gr
         }
-        base[24:32]
+        base[24:31]
     }
 
 A tool could then be used to generate C code that could be called like
@@ -152,7 +157,7 @@ so:
     GDTEnt_set_base(&ent, 0xffffffff); // set the value of the `base` field.
     uint32_t lim = GDTEnt_get_limit(&ent); // get the value of the `limit` field.
 
-Or in a language that has more a bit more powerful mechanisms for
+Or in a language that has a bit more powerful mechanisms for
 abstraction, such as C++ or rust:
 
     ent.base = 0xffffffff;
@@ -252,7 +257,12 @@ their use.
 
 # Open Questions
 
+This section is basically a brain dump of other things we could add if
+desired. My inclination is to take wait-and-see approach with these, and
+try to avoid mission/feature creep.
+
 ## Sum types?
+
 If we have a data structure like (OCaml syntax):
 
     type t =
@@ -339,11 +349,22 @@ as future work.
 
 ## Variable length fields?
 
-## Scope?
+Sometimes you'll see data structures that look like this:
 
-I'm pretty sure I want at least the sum-type functionality, but the
-pointer stuff gets a little trickier, and you could go pretty deep with
-this. Need to better define the scope of things we want to deal with.
+
+    +-------------+
+    | length of A |
+    +-------------+
+    | A           |
+    +-------------+
+    | length of B |
+    +-------------+
+    | B           |
+    +-------------+
+    | ...         |
+
+From an API standpoint, it would be nice to provide something
+iterator-like.
 
 ## What code to gen?
 
