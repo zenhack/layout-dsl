@@ -8,6 +8,11 @@ module Layout.Ast where
 
 import GHC.Exts (Constraint)
 import Data.Text (Text)
+import qualified Data.Map as M
+
+-- | A symbol table, mapping names to type, layout pairs.
+newtype SymbolTable lParams slice
+    = SymbolTable (M.Map Text (TypeDecl, LayoutDecl lParams slice))
 
 data File lParams slice
     = File [(Text, Decl lParams slice)]

@@ -24,6 +24,7 @@ import Data.Functor.Identity (Identity(..))
 import Data.Maybe (fromJust)
 import Data.Text (Text)
 import qualified Layout.Ast as Ast
+import Layout.Ast (SymbolTable(..))
 import Layout.Parser (ParseStage)
 import qualified Data.Map.Strict as M
 
@@ -35,10 +36,6 @@ data ValidationError
     | ConflictingLayoutParams [Ast.LayoutParam]
     | TypeParamsNotImplemented Text
     deriving(Show, Eq)
-
--- | A symbol table, mapping names to type, layout pairs.
-newtype SymbolTable lParams slice
-    = SymbolTable (M.Map Text (Ast.TypeDecl, Ast.LayoutDecl lParams slice))
 
 deriving instance Ast.ParamCtx Show lParams slice => Show (SymbolTable lParams slice)
 deriving instance Ast.ParamCtx Eq   lParams slice => Eq   (SymbolTable lParams slice)
