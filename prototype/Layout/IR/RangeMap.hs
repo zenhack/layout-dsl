@@ -68,3 +68,11 @@ chunkBytes (FieldMap fm) = FieldMap (map chunkField fm)
                         })
         else
             [Indexed startByte (rm { rangeLayoutOff = startBit})]
+
+
+{- TODO:
+
+-- | FromAst computes field maps for each of the data types defined in the
+-- symbol table.
+fromAst :: Validated Ast.SymbolTable -> [(Text, FieldMap Identity)]
+-}
