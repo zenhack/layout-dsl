@@ -10,6 +10,16 @@ import GHC.Exts (Constraint)
 import Data.Text (Text)
 import qualified Data.Map as M
 
+-- The Ast is parametrized over a few type (operators) so that the types can be
+-- strengthened as the translation goes on. We define a few type synonyms for
+-- specific stages in the translation:
+--
+-- * ParseStage is a helper for specifiying the monomorphized types that
+--   come out of the parser.
+-- * Validated specifies the types once the validation step is complete.
+type ParseStage t = t [LayoutParam] Maybe
+type Validated t = t (Maybe Int, Maybe ByteOrder) Identity
+
 -- | A symbol table, mapping names to type, layout pairs.
 newtype SymbolTable lParams slice
     = SymbolTable (M.Map Text (TypeDecl, LayoutDecl lParams slice))

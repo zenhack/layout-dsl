@@ -24,8 +24,7 @@ import Data.Functor.Identity (Identity(..))
 import Data.Maybe (fromJust)
 import Data.Text (Text)
 import qualified Layout.Ast as Ast
-import Layout.Ast (SymbolTable(..))
-import Layout.Parser (ParseStage)
+import Layout.Ast (SymbolTable(..), ParseStage)
 import qualified Data.Map.Strict as M
 
 data ValidationError

@@ -21,12 +21,6 @@ import Data.Text (Text)
 import Layout.Ast
 
 
--- The Ast is parametrized over a few type (operators) so that the types can be
--- strengthened as the translation goes on. ParseStage is a helper for
--- specifiying the monomorphized types that we actually parse:
-type ParseStage t = t [LayoutParam] Maybe
-
-
 lLetter, lBinaryDigit, lDecimalDigit, lOctalDigit, lHexDigit :: Parser Char
 
 lLetter = oneOf $ ['A'..'Z'] ++ ['a'..'z'] ++ ['_']
