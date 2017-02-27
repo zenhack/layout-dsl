@@ -9,6 +9,7 @@ module Layout.Ast where
 import GHC.Exts (Constraint)
 import Data.Text (Text)
 import qualified Data.Map as M
+import Data.Functor.Identity (Identity)
 
 -- The Ast is parametrized over a few type (operators) so that the types can be
 -- strengthened as the translation goes on. We define a few type synonyms for
