@@ -198,6 +198,13 @@ checkLayoutSpecLPs  :: LPChecker Ast.LayoutSpec  slice
 checkLayoutFieldLPs :: LPChecker Ast.LayoutField slice
 checkNamedLFLPs     :: LPChecker Ast.NamedLF     slice
 
+-- | checkLayoutParams validates the layout parameters in an Ast,
+-- returning either Left [list of errors] or Right (new ast), where
+-- the new ast's type enforces a legal set of layout parameters, i.e.
+-- at most one endianness and one alignment. (Notably, it does not
+-- verify consistency between alignment declarations of different
+-- fields/types.
+checkLayoutParams :: LPChecker Ast.File slice
 checkLayoutParams = checkFileLPs
 
 checkFileLPs (Ast.File decls) = do
@@ -229,6 +236,9 @@ layoutDeclES :: ESConverter Ast.LayoutDecl p
 layoutSpecES :: ESConverter Ast.LayoutSpec p
 layoutFieldES :: ESConverter Ast.LayoutField p
 
+-- | explicitSlices fills in the slice bounds for fields for which they are
+-- unspecified. The return type enforces that all bounds are explicit.
+explicitSlices :: ESConverter Ast.File p
 explicitSlices = fileES
 
 fileES syms (Ast.File decls) =
