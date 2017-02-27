@@ -58,8 +58,8 @@ chunkBytes (FieldMap fm) = FieldMap (map chunkField fm)
         if startBit + rangeLen rm >= 8 then
             let lenFst = 8 - startBit
             in Indexed startByte (rm { rangeLen = lenFst
-                                 , rangeLayoutOff = startBit
-                                 })
+                                     , rangeLayoutOff = startBit
+                                     })
                : chunkRange
                      (Identity RangeMap
                         { rangeLen = rangeLen rm - lenFst
