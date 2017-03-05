@@ -6,7 +6,9 @@ import Control.Monad.Identity (Identity(..))
 import Test.Framework (testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
+import Test.QuickCheck.Gen (oneof)
 import Test.QuickCheck.Instances
+import Layout.Ast (ByteOrder(..))
 import Layout.IR.RangeMap
     ( FieldMap(..)
     , Index(..)
@@ -16,6 +18,9 @@ import Layout.IR.RangeMap
 
 instance Arbitrary Index where
     arbitrary = Index <$> arbitrary
+
+instance Arbitrary ByteOrder where
+    arbitrary = oneof $ map return [Big, Little]
 
 instance Arbitrary info => Arbitrary (RangeMap info) where
     arbitrary = RangeMap <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary

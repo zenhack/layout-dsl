@@ -4,25 +4,33 @@
 Intermediate form mapping bit ranges in the logical structure to bit ranges
 in the physical structure.
 
-There are conceptually two phases of translation handled here. Both deal
-with mappings of field names to pairs of locations, one in the logical layout
-and one in the physical.
+There are a few phases of translation handled here. They deal with mappings
+of field names to pairs of locations, one in the logical layout and one in the
+physical.
 
 In the first stage, these are just the flat bit ranges, relative to the start
-of the whole cases. In the second case, we split these into ranges with a
-maximum length of 8 bits, and tag them with the byte index from the start of
-the struct.
+of the whole types & layouts, plus the byte order of the fields.
 
-The structures of these two intermediate forms are very similar, so 'FieldMap'
-handles both of these. 'FieldMap' has an info type parameter which is '()' in
-the first case and 'Index' (holding the byte index) in the second case.
+In the second stage, we split these into ranges with a maximum length of 8
+bits, and tag them with the byte index from the start of the struct.
 
-'chunkBytes' converts from the first stage to the second.
+In the final stage, we remove the byte order info, manipulating the offsets
+to make everything work without it.
+
+The structures of these intermediate forms are similiar, so the same basic
+types ('FieldMap' and 'RangeMap') handle each of them. They take an info
+type paramter that carries the metadata needed for each stage -- the input
+to the first stage has @info = ByteOrder@, the next has @info = (Index,
+ByteOrder)@, and the final has @info = Index@.
+
+'chunkBytes' converts from the first stage to the second. The second-to-third
+stage translation is not yet implemented.
 -}
 module Layout.IR.RangeMap where
 
 import Control.Monad.Identity (Identity(Identity))
 import Data.Text (Text)
+import Layout.Ast (ByteOrder(..))
 
 newtype Index = Index Int deriving(Show, Eq)
 
@@ -48,7 +56,7 @@ instance Eq (bucket RangeMap) => Eq (FieldMap bucket) where
 -- @chunkBytes@ transforms its argument to one where all @RangeMap@s fit neatly
 -- inside of one byte within the physical structure. See the module-level
 -- comment for further discussion.
-chunkBytes :: FieldMap () -> FieldMap Index
+chunkBytes :: FieldMap ByteOrder -> FieldMap (Index, ByteOrder)
 chunkBytes (FieldMap fm) = FieldMap (map chunkField fm)
   where
     chunkField (name, ranges) = (name, concat $ map chunkRange ranges)
@@ -61,18 +69,18 @@ chunkBytes (FieldMap fm) = FieldMap (map chunkField fm)
             let lenFst = 8 - startBit
             in (rm { rangeLen = lenFst
                    , rangeLayoutOff = startBit
-                   , rangeInfo = Index startByte
+                   , rangeInfo = (Index startByte, rangeInfo rm)
                    })
                : chunkRange
                      (RangeMap
                         { rangeLen = rangeLen rm - lenFst
                         , rangeTypeOff = rangeTypeOff rm + lenFst
                         , rangeLayoutOff = rangeLayoutOff rm + lenFst
-                        , rangeInfo = ()
+                        , rangeInfo = rangeInfo rm
                         })
         else
             [(rm { rangeLayoutOff = startBit
-                 , rangeInfo = Index startByte
+                 , rangeInfo = (Index startByte, rangeInfo rm)
                  })]
 
 
