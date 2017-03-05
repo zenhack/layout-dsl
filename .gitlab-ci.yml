@@ -2,10 +2,6 @@ before_script:
   - cd prototype
   - cabal update
   - cabal install --only-dependencies --enable-tests
-test:7.8:
-  image: haskell:7.8
-  script:
-    - ./gitlab-test.sh
 test:7.10:
   image: haskell:7.10
   script:
