@@ -9,33 +9,28 @@ import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import Test.QuickCheck.Instances
 import Layout.IR.RangeMap
     ( FieldMap(..)
-    , Indexed(..)
+    , Index(..)
     , RangeMap(..)
     , chunkBytes
     )
 
-instance Arbitrary a => Arbitrary (Indexed a) where
-    arbitrary = Indexed <$> arbitrary <*> arbitrary
+instance Arbitrary Index where
+    arbitrary = Index <$> arbitrary
 
-instance Arbitrary RangeMap where
-    arbitrary = RangeMap <$> arbitrary <*> arbitrary <*> arbitrary
+instance Arbitrary info => Arbitrary (RangeMap info) where
+    arbitrary = RangeMap <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
-instance Arbitrary (f RangeMap) => Arbitrary (FieldMap f) where
+instance Arbitrary info => Arbitrary (FieldMap info) where
     arbitrary = FieldMap <$> arbitrary
 
-instance Functor Indexed where
-    fmap f (Indexed n x) = Indexed n (f x)
+totalSize :: FieldMap info -> Int
+totalSize = sum . map rangeLen . allRangeMaps
 
-totalSize :: (bucket RangeMap -> RangeMap) -> FieldMap bucket -> Int
-totalSize stripBucket = sum . map rangeLen . allRangeMaps stripBucket
-
-allRangeMaps stripBucket (FieldMap fm) = concat $ map (map stripBucket . snd) fm
-
-stripIndexed (Indexed _ x) = x
+allRangeMaps (FieldMap fm) = concat $ map snd fm
 
 rangeMapTests = testGroup "Range map tests"
     [ testProperty "chunkBytes preserves total size."
-        (\fm -> totalSize runIdentity fm == totalSize stripIndexed (chunkBytes fm))
+        (\fm -> totalSize fm == totalSize (chunkBytes fm))
     , testProperty "chunkBytes doesn't make ranges > 8 bits"
-        (\fm -> and $ map ((<= 8) . rangeLen) $ allRangeMaps stripIndexed (chunkBytes fm))
+        (\fm -> and $ map ((<= 8) . rangeLen) $ allRangeMaps (chunkBytes fm))
     ]
