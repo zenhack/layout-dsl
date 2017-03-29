@@ -5,6 +5,8 @@ import Layout.Parser
 import Layout.Validate (buildSyms)
 import Text.ParserCombinators.Parsec (runParser)
 
+import Layout.IR.RangeMap
+
 main :: IO ()
 main = do
     contents <- getContents
