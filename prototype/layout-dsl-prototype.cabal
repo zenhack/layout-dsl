@@ -23,13 +23,13 @@ executable layout-dsl-prototype
     KindSignatures,
     DoAndIfThenElse
   other-modules:
-    Layout.Ast,
-    Layout.Parser,
-    Layout.Validate,
-    Layout.IR.MachineOps,
-    Layout.IR.RangeMap,
-    Layout.Target.C,
-    Layout.Target.Haskell
+    Language.LDSL.Ast,
+    Language.LDSL.Parser,
+    Language.LDSL.Validate,
+    Language.LDSL.IR.MachineOps,
+    Language.LDSL.IR.RangeMap,
+    Language.LDSL.Target.C,
+    Language.LDSL.Target.Haskell
   -- other-extensions:
   build-depends:
     base         >= 4.7 && <4.10,

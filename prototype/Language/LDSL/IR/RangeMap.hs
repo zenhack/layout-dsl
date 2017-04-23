@@ -26,11 +26,11 @@ ByteOrder)@, and the final has @info = Index@.
 'chunkBytes' converts from the first stage to the second. The second-to-third
 stage translation is not yet implemented.
 -}
-module Layout.IR.RangeMap where
+module Language.LDSL.IR.RangeMap where
 
 import Control.Monad.Identity (Identity(Identity))
 import Data.Text (Text)
-import Layout.Ast (ByteOrder(..))
+import Language.LDSL.Ast (ByteOrder(..))
 
 newtype Index = Index Int deriving(Show, Eq)
 

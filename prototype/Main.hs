@@ -1,11 +1,11 @@
 module Main where
 
-import Layout.Ast (File(..))
-import Layout.Parser
-import Layout.Validate (buildSyms)
+import Language.LDSL.Ast (File(..))
+import Language.LDSL.Parser
+import Language.LDSL.Validate (buildSyms)
 import Text.ParserCombinators.Parsec (runParser)
 
-import Layout.IR.RangeMap
+import Language.LDSL.IR.RangeMap
 
 main :: IO ()
 main = do

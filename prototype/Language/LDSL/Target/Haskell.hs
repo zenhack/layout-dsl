@@ -2,11 +2,11 @@
 Backend in the form of an interpreter; converts intermediate forms to haskell
 helper functions at run-time.
 -}
-module Layout.Target.Haskell (interpGet, interpSet) where
+module Language.LDSL.Target.Haskell (interpGet, interpSet) where
 
 import Data.Bits
 import Data.Word
-import Layout.IR.MachineOps
+import Language.LDSL.IR.MachineOps
 
 import qualified Data.ByteString as B
 

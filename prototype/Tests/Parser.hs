@@ -3,8 +3,8 @@ module Tests.Parser (parserTests) where
 import Test.HUnit (assertEqual, Test(TestCase, TestList))
 import Test.Framework (testGroup)
 import Test.Framework.Providers.HUnit (hUnitTestToTests)
-import Layout.Ast
-import Layout.Parser (pFile)
+import Language.LDSL.Ast
+import Language.LDSL.Parser (pFile)
 import Text.ParserCombinators.Parsec (runParser)
 
 

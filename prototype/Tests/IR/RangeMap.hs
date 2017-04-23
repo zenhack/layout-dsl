@@ -8,8 +8,8 @@ import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import Test.QuickCheck.Gen (oneof)
 import Test.QuickCheck.Instances
-import Layout.Ast (ByteOrder(..))
-import Layout.IR.RangeMap
+import Language.LDSL.Ast (ByteOrder(..))
+import Language.LDSL.IR.RangeMap
     ( FieldMap(..)
     , Index(..)
     , RangeMap(..)

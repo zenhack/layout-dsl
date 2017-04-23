@@ -4,7 +4,7 @@
 
 Abstract synatx tree for the DSL.
 -}
-module Layout.Ast where
+module Language.LDSL.Ast where
 
 import GHC.Exts (Constraint)
 import Data.Text (Text)

@@ -5,7 +5,7 @@
 Do some validation of the Ast, and collect some info useful for future
 translation stages.
 -}
-module Layout.Validate
+module Language.LDSL.Validate
     ( buildSyms
     , SymbolTable(..)
     , ValidationError(..)
@@ -23,8 +23,8 @@ import Control.Monad.Writer (MonadWriter, tell, WriterT(..))
 import Data.Functor.Identity (Identity(..))
 import Data.Maybe (fromJust)
 import Data.Text (Text)
-import qualified Layout.Ast as Ast
-import Layout.Ast (SymbolTable(..), ParseStage)
+import qualified Language.LDSL.Ast as Ast
+import Language.LDSL.Ast (SymbolTable(..), ParseStage)
 import qualified Data.Map.Strict as M
 
 data ValidationError

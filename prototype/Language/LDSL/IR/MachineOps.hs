@@ -6,7 +6,7 @@ Shifts, bitwise logical operators, integer upcasts/downcasts...
 These should be available in most any programming language, so this is a good
 last leg before generating getters/setters for a target language.
 -}
-module Layout.IR.MachineOps where
+module Language.LDSL.IR.MachineOps where
 
 import Data.Word
 

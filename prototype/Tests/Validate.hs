@@ -1,7 +1,7 @@
 module Tests.Validate (validateTests) where
 
-import Layout.Ast
-import Layout.Validate
+import Language.LDSL.Ast
+import Language.LDSL.Validate
 import qualified Data.Map.Strict as M
 import Test.HUnit (assertEqual, Test(TestCase, TestList))
 import Test.Framework (testGroup)

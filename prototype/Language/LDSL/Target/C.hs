@@ -2,9 +2,9 @@
 
 Backend which generates C code
 -}
-module Layout.Target.C (interpGet, interpSet) where
+module Language.LDSL.Target.C (interpGet, interpSet) where
 
-import Layout.IR.MachineOps
+import Language.LDSL.IR.MachineOps
 import Data.Monoid ((<>))
 import Data.Text (Text)
 import qualified Data.Text as T

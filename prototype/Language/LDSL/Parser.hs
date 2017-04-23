@@ -1,5 +1,5 @@
 --module Layout.Parser (pFile) where
-module Layout.Parser where
+module Language.LDSL.Parser where
 
 -- General note: we make use of fewer of parsec's features and pre-existing
 -- helpers than might otherwise sense, favoring instead having this
@@ -18,7 +18,7 @@ import Data.Char (toLower)
 import Text.ParserCombinators.Parsec hiding(token)
 import qualified Data.Text as T
 import Data.Text (Text)
-import Layout.Ast
+import Language.LDSL.Ast
 
 
 lLetter, lBinaryDigit, lDecimalDigit, lOctalDigit, lHexDigit :: Parser Char
